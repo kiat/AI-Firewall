@@ -5,15 +5,8 @@ set -euo pipefail
 LAN_IF="${LAN_IF:-LAN}"
 WAN_IF="${WAN_IF:-WAN}"
 WHITELIST_FILE="${WHITELIST_FILE:-$(dirname "$0")/whitelist.txt}"
+BLOCKED_AI_DOMAINS_FILE="${BLOCKED_AI_DOMAINS_FILE:-$(dirname "$0")/blocked_ai_domains.txt}"
 ALLOWED_IPSET="allowed_sites"
-BLOCKED_AI_DOMAINS=(
-  "openai.com"
-  "chatgpt.com"
-  "claude.ai"
-  "anthropic.com"
-  "copilot.microsoft.com"
-  "githubcopilot.com"
-)
 
 if [[ "${EUID}" -ne 0 ]]; then
   echo "This script must be run as root." >&2
@@ -37,9 +30,19 @@ if [[ ! -f "${WHITELIST_FILE}" ]]; then
   exit 1
 fi
 
+if [[ ! -f "${BLOCKED_AI_DOMAINS_FILE}" ]]; then
+  echo "Blocked AI domains file not found: ${BLOCKED_AI_DOMAINS_FILE}" >&2
+  exit 1
+fi
+
 echo "WARNING: This script will reset all existing iptables rules. A backup will be saved to /etc/iptables/ai-firewall.backup.v4."
 
-mapfile -t ALLOWED_DOMAINS < <(
+load_domains_from_file() {
+  local file_path="$1"
+  local file_description="$2"
+  local domain
+  local original_domain
+
   while IFS= read -r domain || [[ -n "${domain}" ]]; do
     original_domain="${domain}"
     domain="$(echo "${domain}" | sed -E 's/^[[:space:]]+|[[:space:]]+$//g')"
@@ -49,13 +52,20 @@ mapfile -t ALLOWED_DOMAINS < <(
       domain="${domain#*.}"
     fi
     [[ -z "${domain}" ]] && continue
-    # Accept domains with dot-separated labels and a 2+ character alphabetic TLD.
     if ! [[ "${domain}" =~ ^([[:alnum:]-]+\.)+[[:alpha:]]{2,}$ ]]; then
-      echo "Invalid domain entry in whitelist: '${original_domain}'" >&2
+      echo "Invalid domain entry in ${file_description}: '${original_domain}'" >&2
       exit 1
     fi
     echo "${domain}"
-  done < "${WHITELIST_FILE}"
+  done < "${file_path}"
+}
+
+mapfile -t ALLOWED_DOMAINS < <(
+  load_domains_from_file "${WHITELIST_FILE}" "whitelist"
+)
+
+mapfile -t BLOCKED_AI_DOMAINS < <(
+  load_domains_from_file "${BLOCKED_AI_DOMAINS_FILE}" "blocked AI domains file"
 )
 
 echo "[1/4] Creating allow-list ipset"
@@ -110,11 +120,13 @@ elif command -v iptables-save >/dev/null 2>&1; then
 fi
 
 ALLOWED_COUNT="${#ALLOWED_DOMAINS[@]}"
+BLOCKED_COUNT="${#BLOCKED_AI_DOMAINS[@]}"
 cat <<MSG
 Firewall configured.
 LAN interface: ${LAN_IF}
 WAN interface: ${WAN_IF}
 Whitelist file: ${WHITELIST_FILE}
+Blocked AI domains file: ${BLOCKED_AI_DOMAINS_FILE}
 Allowed domains loaded: ${ALLOWED_COUNT}
-Blocked AI domains: ${BLOCKED_AI_DOMAINS[*]}
+Blocked AI domains loaded: ${BLOCKED_COUNT}
 MSG

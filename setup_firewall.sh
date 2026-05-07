@@ -89,12 +89,14 @@ systemctl restart dnsmasq
 
 echo "[5/6] Applying iptables firewall"
 echo "Warning: this resets existing iptables rules on this host."
+mkdir -p /etc/iptables
+iptables-save > /etc/iptables/ai-firewall.backup.v4
 iptables -F
 iptables -t nat -F
 iptables -X
 
-iptables -P INPUT DROP
-iptables -P FORWARD DROP
+iptables -P INPUT ACCEPT
+iptables -P FORWARD ACCEPT
 iptables -P OUTPUT ACCEPT
 
 iptables -A INPUT -i lo -j ACCEPT
@@ -108,6 +110,8 @@ iptables -A FORWARD -i "${LAN_IF}" -o "${WAN_IF}" -m set --match-set "${ALLOWED_
 iptables -A FORWARD -i "${LAN_IF}" -o "${WAN_IF}" -j DROP
 
 iptables -t nat -A POSTROUTING -o "${WAN_IF}" -j MASQUERADE
+iptables -P INPUT DROP
+iptables -P FORWARD DROP
 
 echo "[6/6] Saving rules (if persistence tools exist)"
 if command -v netfilter-persistent >/dev/null 2>&1; then

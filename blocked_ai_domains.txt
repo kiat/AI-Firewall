@@ -1,0 +1,6 @@
+openai.com
+chatgpt.com
+claude.ai
+anthropic.com
+copilot.microsoft.com
+githubcopilot.com

@@ -56,7 +56,7 @@ is_valid_ipv4() {
 
   IFS='.' read -r -a octets <<< "${ip}"
   for octet in "${octets[@]}"; do
-    if ! [[ "${octet}" =~ ^[0-9]{1,3}$ ]] || (( octet < 0 || octet > 255 )); then
+    if ! [[ "${octet}" =~ ^[0-9]{1,3}$ ]] || (( octet > 255 )); then
       return 1
     fi
   done
@@ -79,34 +79,34 @@ is_valid_ipv4_cidr() {
 
 load_whitelist_entries_from_file() {
   local file_path="$1"
-  local domain
-  local original_domain
+  local entry
+  local original_entry
 
-  while IFS= read -r domain || [[ -n "${domain}" ]]; do
-    original_domain="${domain}"
-    domain="$(echo "${domain}" | sed -E 's/^[[:space:]]+|[[:space:]]+$//g')"
-    [[ -z "${domain}" ]] && continue
-    [[ "${domain}" == \#* ]] && continue
-    if [[ "${domain}" == \*.* ]]; then
-      domain="${domain#*.}"
+  while IFS= read -r entry || [[ -n "${entry}" ]]; do
+    original_entry="${entry}"
+    entry="$(echo "${entry}" | sed -E 's/^[[:space:]]+|[[:space:]]+$//g')"
+    [[ -z "${entry}" ]] && continue
+    [[ "${entry}" == \#* ]] && continue
+    if [[ "${entry}" == \*.* ]]; then
+      entry="${entry#*.}"
     fi
-    [[ -z "${domain}" ]] && continue
-    if [[ "${domain}" =~ ^([[:alnum:]-]+\.)+[[:alpha:]]{2,}$ ]]; then
-      echo "domain:${domain}"
+    [[ -z "${entry}" ]] && continue
+    if [[ "${entry}" =~ ^([[:alnum:]-]+\.)+[[:alpha:]]{2,}$ ]]; then
+      echo "domain:${entry}"
       continue
     fi
 
-    if is_valid_ipv4 "${domain}"; then
-      echo "ip:${domain}"
+    if is_valid_ipv4 "${entry}"; then
+      echo "ip:${entry}"
       continue
     fi
 
-    if is_valid_ipv4_cidr "${domain}"; then
-      echo "cidr:${domain}"
+    if is_valid_ipv4_cidr "${entry}"; then
+      echo "cidr:${entry}"
       continue
     fi
 
-    echo "Invalid entry in whitelist: '${original_domain}'. Use a domain, IPv4, or IPv4 CIDR." >&2
+    echo "Invalid entry in whitelist: '${original_entry}'. Use a domain, IPv4, or IPv4 CIDR." >&2
     exit 1
   done < "${file_path}"
 }

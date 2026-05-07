@@ -30,3 +30,7 @@ sudo LAN_IF=enp3s0 WAN_IF=enp2s0 LAN_CIDR=10.10.10.1/24 DHCP_START=10.10.10.50 D
   - `python.org`
   - `wikipedia.org`
 - Applies `iptables` forwarding and NAT rules so LAN clients can reach only allow-listed destinations
+
+Notes:
+- Students must use DHCP from this firewall so their DNS resolver is the firewall (`dnsmasq`).
+- Allow-listed IPs are populated from DNS queries; after startup, the first DNS resolution for each allowed site seeds `ipset`.

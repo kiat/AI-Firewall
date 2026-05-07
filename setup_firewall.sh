@@ -30,6 +30,13 @@ if [[ "${EUID}" -ne 0 ]]; then
   exit 1
 fi
 
+for interface in "${LAN_IF}" "${WAN_IF}"; do
+  if ! ip link show "${interface}" >/dev/null 2>&1; then
+    echo "Network interface '${interface}' was not found. Set LAN_IF/WAN_IF to valid interface names." >&2
+    exit 1
+  fi
+done
+
 if ! command -v iptables >/dev/null 2>&1 || ! command -v ipset >/dev/null 2>&1 || ! command -v dnsmasq >/dev/null 2>&1; then
   export DEBIAN_FRONTEND=noninteractive
   apt-get update
@@ -43,7 +50,9 @@ ip addr flush dev "${LAN_IF}"
 ip addr add "${LAN_CIDR}" dev "${LAN_IF}"
 
 if ! ip route show default | grep -q "dev ${WAN_IF}"; then
-  dhclient -v "${WAN_IF}" || true
+  if ! dhclient -v "${WAN_IF}"; then
+    echo "Warning: Unable to obtain DHCP lease on ${WAN_IF}. WAN internet may be unavailable." >&2
+  fi
 fi
 
 echo "[2/6] Enabling IPv4 forwarding"
@@ -79,6 +88,7 @@ done
 systemctl restart dnsmasq
 
 echo "[5/6] Applying iptables firewall"
+echo "Warning: this resets existing iptables rules on this host."
 iptables -F
 iptables -t nat -F
 iptables -X
@@ -94,10 +104,8 @@ iptables -A INPUT -i "${LAN_IF}" -p udp --dport 53 -j ACCEPT
 iptables -A INPUT -i "${LAN_IF}" -p tcp --dport 53 -j ACCEPT
 
 iptables -A FORWARD -m conntrack --ctstate ESTABLISHED,RELATED -j ACCEPT
-iptables -A FORWARD -i "${LAN_IF}" -o "${WAN_IF}" -p udp --dport 53 -j ACCEPT
-iptables -A FORWARD -i "${LAN_IF}" -o "${WAN_IF}" -p tcp --dport 53 -j ACCEPT
 iptables -A FORWARD -i "${LAN_IF}" -o "${WAN_IF}" -m set --match-set "${ALLOWED_IPSET}" dst -j ACCEPT
-iptables -A FORWARD -i "${LAN_IF}" -o "${WAN_IF}" -j REJECT
+iptables -A FORWARD -i "${LAN_IF}" -o "${WAN_IF}" -j DROP
 
 iptables -t nat -A POSTROUTING -o "${WAN_IF}" -j MASQUERADE
 

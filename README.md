@@ -16,7 +16,7 @@ A Linux LAN/WAN classroom firewall setup that allows only approved websites and 
 ## Usage
 
 1. Edit interface names at the top of each script **or** set environment variables when running the scripts.
-2. Update `whitelist.txt` with allowed domains (one per line). Use `example.com` to match both root and subdomains; `*.example.com` is also accepted and normalized.
+2. Update `whitelist.txt` with allowed domains (one per line). Use `example.com` to match both root and subdomains (`dnsmasq` `ipset=/example.com/...` behavior); `*.example.com` is also accepted and normalized.
 3. Run both scripts as root:
 
 ```bash

@@ -38,7 +38,7 @@ if ! command -v iptables >/dev/null 2>&1 || ! command -v ipset >/dev/null 2>&1 |
   exit 1
 fi
 
-echo "Warning: this script resets existing iptables rules on this host."
+echo "WARNING: This script will reset all existing iptables rules. A backup will be saved to /etc/iptables/ai-firewall.backup.v4."
 
 mapfile -t ALLOWED_DOMAINS < <(
   while IFS= read -r domain || [[ -n "${domain}" ]]; do
@@ -50,6 +50,7 @@ mapfile -t ALLOWED_DOMAINS < <(
       domain="${domain#*.}"
     fi
     [[ -z "${domain}" ]] && continue
+    # Accept domains with dot-separated labels and a 2+ character alphabetic TLD.
     if ! [[ "${domain}" =~ ^([[:alnum:]-]+\.)+[[:alpha:]]{2,}$ ]]; then
       echo "Invalid domain entry in whitelist: '${original_domain}'" >&2
       exit 1

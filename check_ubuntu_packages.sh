@@ -27,7 +27,7 @@ fi
 missing_packages=()
 
 package_is_installed() {
-  dpkg-query -W -f='${db:Status-Abbrev}' "$1" 2>/dev/null | grep -q '^ii '
+  dpkg-query -W -f='${db:Status-Status}' "$1" 2>/dev/null | grep -q '^installed$'
 }
 
 echo "Checking required Ubuntu packages..."

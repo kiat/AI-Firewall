@@ -46,6 +46,71 @@ fi
 
 echo "WARNING: This script will reset all existing iptables rules. A backup will be saved to /etc/iptables/ai-firewall.backup.v4."
 
+is_valid_ipv4() {
+  local ip="$1"
+  local octet
+
+  if ! [[ "${ip}" =~ ^([0-9]{1,3}\.){3}[0-9]{1,3}$ ]]; then
+    return 1
+  fi
+
+  IFS='.' read -r -a octets <<< "${ip}"
+  for octet in "${octets[@]}"; do
+    if ! [[ "${octet}" =~ ^[0-9]{1,3}$ ]] || (( octet > 255 )); then
+      return 1
+    fi
+  done
+
+  return 0
+}
+
+is_valid_ipv4_cidr() {
+  local cidr="$1"
+  local ip prefix
+
+  if ! [[ "${cidr}" =~ ^([0-9]{1,3}\.){3}[0-9]{1,3}/([0-9]|[1-2][0-9]|3[0-2])$ ]]; then
+    return 1
+  fi
+
+  ip="${cidr%/*}"
+  prefix="${cidr#*/}"
+  is_valid_ipv4 "${ip}" && [[ "${prefix}" =~ ^([0-9]|[1-2][0-9]|3[0-2])$ ]]
+}
+
+load_whitelist_entries_from_file() {
+  local file_path="$1"
+  local entry
+  local original_entry
+
+  while IFS= read -r entry || [[ -n "${entry}" ]]; do
+    original_entry="${entry}"
+    entry="$(echo "${entry}" | sed -E 's/^[[:space:]]+|[[:space:]]+$//g')"
+    [[ -z "${entry}" ]] && continue
+    [[ "${entry}" == \#* ]] && continue
+    if [[ "${entry}" == \*.* ]]; then
+      entry="${entry#*.}"
+    fi
+    [[ -z "${entry}" ]] && continue
+    if [[ "${entry}" =~ ^([[:alnum:]-]+\.)+[[:alpha:]]{2,}$ ]]; then
+      echo "domain:${entry}"
+      continue
+    fi
+
+    if is_valid_ipv4 "${entry}"; then
+      echo "ip:${entry}"
+      continue
+    fi
+
+    if is_valid_ipv4_cidr "${entry}"; then
+      echo "cidr:${entry}"
+      continue
+    fi
+
+    echo "Invalid entry in whitelist: '${original_entry}'. Use a domain, IPv4, or IPv4 CIDR." >&2
+    exit 1
+  done < "${file_path}"
+}
+
 load_domains_from_file() {
   local file_path="$1"
   local file_description="$2"
@@ -69,16 +134,38 @@ load_domains_from_file() {
   done < "${file_path}"
 }
 
-mapfile -t ALLOWED_DOMAINS < <(
-  load_domains_from_file "${WHITELIST_FILE}" "whitelist"
-)
+ALLOWED_DOMAINS=()
+ALLOWED_IPS=()
+ALLOWED_CIDRS=()
+while IFS= read -r entry; do
+  entry_type="${entry%%:*}"
+  entry_value="${entry#*:}"
+
+  case "${entry_type}" in
+    domain)
+      ALLOWED_DOMAINS+=("${entry_value}")
+      ;;
+    ip)
+      ALLOWED_IPS+=("${entry_value}")
+      ;;
+    cidr)
+      ALLOWED_CIDRS+=("${entry_value}")
+      ;;
+  esac
+done < <(load_whitelist_entries_from_file "${WHITELIST_FILE}")
 
 mapfile -t BLOCKED_AI_DOMAINS < <(
   load_domains_from_file "${BLOCKED_AI_DOMAINS_FILE}" "blocked AI domains file"
 )
 
 echo "[1/4] Creating allow-list ipset"
-ipset create "${ALLOWED_IPSET}" hash:ip family inet -exist
+if ipset list -n | grep -Fxq "${ALLOWED_IPSET}"; then
+  existing_ipset_type="$(ipset list "${ALLOWED_IPSET}" | awk -F': ' '/^Type:/{print $2; exit}')"
+  if [[ "${existing_ipset_type}" != "hash:net" ]]; then
+    ipset destroy "${ALLOWED_IPSET}"
+  fi
+fi
+ipset create "${ALLOWED_IPSET}" hash:net family inet -exist
 ipset flush "${ALLOWED_IPSET}"
 
 echo "[2/4] Writing dnsmasq policy from whitelist file"
@@ -95,6 +182,14 @@ DNSMASQ_POLICY_CONF_PATH="/etc/dnsmasq.d/ai-firewall-policy.conf"
 } > "${DNSMASQ_POLICY_CONF_PATH}"
 
 systemctl restart dnsmasq
+
+for allowed_ip in "${ALLOWED_IPS[@]}"; do
+  ipset add "${ALLOWED_IPSET}" "${allowed_ip}" -exist
+done
+
+for allowed_cidr in "${ALLOWED_CIDRS[@]}"; do
+  ipset add "${ALLOWED_IPSET}" "${allowed_cidr}" -exist
+done
 
 echo "[3/4] Applying iptables firewall"
 mkdir -p /etc/iptables
@@ -128,7 +223,9 @@ elif command -v iptables-save >/dev/null 2>&1; then
   iptables-save > /etc/iptables/rules.v4
 fi
 
-ALLOWED_COUNT="${#ALLOWED_DOMAINS[@]}"
+ALLOWED_DOMAIN_COUNT="${#ALLOWED_DOMAINS[@]}"
+ALLOWED_IP_COUNT="${#ALLOWED_IPS[@]}"
+ALLOWED_CIDR_COUNT="${#ALLOWED_CIDRS[@]}"
 BLOCKED_COUNT="${#BLOCKED_AI_DOMAINS[@]}"
 cat <<MSG
 Firewall configured.
@@ -136,6 +233,8 @@ LAN interface: ${LAN_IF}
 WAN interface: ${WAN_IF}
 Whitelist file: ${WHITELIST_FILE}
 Blocked AI domains file: ${BLOCKED_AI_DOMAINS_FILE}
-Allowed domains loaded: ${ALLOWED_COUNT}
+Allowed domains loaded: ${ALLOWED_DOMAIN_COUNT}
+Allowed IPs loaded: ${ALLOWED_IP_COUNT}
+Allowed CIDRs loaded: ${ALLOWED_CIDR_COUNT}
 Blocked AI domains loaded: ${BLOCKED_COUNT}
 MSG

@@ -19,7 +19,7 @@ Ubuntu LAN/WAN firewall scripts for classrooms: allow approved websites and bloc
   - Resets and applies `iptables` rules (backs up current rules first).
   - Writes policy to `/etc/dnsmasq.d/ai-firewall-policy.conf`.
 - `whitelist.txt`
-  - Allowed domains, one domain per line.
+  - Allowed domains/IPs, one entry per line (domain, IPv4, or IPv4 CIDR).
 - `blocked_ai_domains.txt`
   - Blocked AI domains, one domain per line.
 

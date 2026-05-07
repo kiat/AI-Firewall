@@ -4,3 +4,4 @@ claude.ai
 anthropic.com
 copilot.microsoft.com
 githubcopilot.com
+deepseek.com

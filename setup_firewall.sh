@@ -6,7 +6,6 @@ LAN_IF="${LAN_IF:-LAN}"
 WAN_IF="${WAN_IF:-WAN}"
 WHITELIST_FILE="${WHITELIST_FILE:-$(dirname "$0")/whitelist.txt}"
 ALLOWED_IPSET="allowed_sites"
-
 BLOCKED_AI_DOMAINS=(
   "openai.com"
   "chatgpt.com"
@@ -28,13 +27,13 @@ for interface in "${LAN_IF}" "${WAN_IF}"; do
   fi
 done
 
-if [[ ! -f "${WHITELIST_FILE}" ]]; then
-  echo "Whitelist file not found: ${WHITELIST_FILE}" >&2
+if ! command -v iptables >/dev/null 2>&1 || ! command -v ipset >/dev/null 2>&1 || ! command -v dnsmasq >/dev/null 2>&1; then
+  echo "Missing required packages. Run ./setup_system_settings.sh first." >&2
   exit 1
 fi
 
-if ! command -v iptables >/dev/null 2>&1 || ! command -v ipset >/dev/null 2>&1 || ! command -v dnsmasq >/dev/null 2>&1; then
-  echo "Missing required packages. Run ./setup_system_settings.sh first." >&2
+if [[ ! -f "${WHITELIST_FILE}" ]]; then
+  echo "Whitelist file not found: ${WHITELIST_FILE}" >&2
   exit 1
 fi
 
@@ -111,7 +110,6 @@ elif command -v iptables-save >/dev/null 2>&1; then
 fi
 
 ALLOWED_COUNT="${#ALLOWED_DOMAINS[@]}"
-
 cat <<MSG
 Firewall configured.
 LAN interface: ${LAN_IF}

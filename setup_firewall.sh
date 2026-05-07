@@ -1,21 +1,11 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
+# You can edit these defaults here or override with environment variables.
 LAN_IF="${LAN_IF:-LAN}"
 WAN_IF="${WAN_IF:-WAN}"
-LAN_CIDR="${LAN_CIDR:-10.20.30.1/24}"
-DHCP_START="${DHCP_START:-10.20.30.50}"
-DHCP_END="${DHCP_END:-10.20.30.200}"
-DHCP_LEASE="${DHCP_LEASE:-12h}"
+WHITELIST_FILE="${WHITELIST_FILE:-$(dirname "$0")/whitelist.txt}"
 ALLOWED_IPSET="allowed_sites"
-
-ALLOWED_DOMAINS=(
-  "canvas.instructure.com"
-  "instructure.com"
-  "python.org"
-  "wikipedia.org"
-)
-
 BLOCKED_AI_DOMAINS=(
   "openai.com"
   "chatgpt.com"
@@ -38,59 +28,56 @@ for interface in "${LAN_IF}" "${WAN_IF}"; do
 done
 
 if ! command -v iptables >/dev/null 2>&1 || ! command -v ipset >/dev/null 2>&1 || ! command -v dnsmasq >/dev/null 2>&1; then
-  export DEBIAN_FRONTEND=noninteractive
-  apt-get update
-  apt-get install -y iptables ipset dnsmasq
+  echo "Missing required packages. Run ./setup_system_settings.sh first." >&2
+  exit 1
 fi
 
-echo "[1/6] Configuring LAN/WAN interfaces"
-ip link set "${LAN_IF}" up
-ip link set "${WAN_IF}" up
-ip addr flush dev "${LAN_IF}"
-ip addr add "${LAN_CIDR}" dev "${LAN_IF}"
-
-if ! ip route show default | grep -qw "dev ${WAN_IF}"; then
-  if ip -4 addr show dev "${WAN_IF}" | grep -q "inet "; then
-    echo "No default route via ${WAN_IF}; existing static/interface IP configuration detected." >&2
-  elif ! dhclient -1 -v "${WAN_IF}"; then
-    echo "Warning: Unable to obtain DHCP lease on ${WAN_IF}. WAN internet may be unavailable." >&2
-  fi
+if [[ ! -f "${WHITELIST_FILE}" ]]; then
+  echo "Whitelist file not found: ${WHITELIST_FILE}" >&2
+  exit 1
 fi
 
-echo "[2/6] Enabling IPv4 forwarding"
-sysctl -w net.ipv4.ip_forward=1 >/dev/null
-if ! grep -q '^net.ipv4.ip_forward=1$' /etc/sysctl.conf; then
-  echo 'net.ipv4.ip_forward=1' >> /etc/sysctl.conf
-fi
+echo "WARNING: This script will reset all existing iptables rules. A backup will be saved to /etc/iptables/ai-firewall.backup.v4."
 
-echo "[3/6] Creating allow-list IP set"
+mapfile -t ALLOWED_DOMAINS < <(
+  while IFS= read -r domain || [[ -n "${domain}" ]]; do
+    original_domain="${domain}"
+    domain="$(echo "${domain}" | sed -E 's/^[[:space:]]+|[[:space:]]+$//g')"
+    [[ -z "${domain}" ]] && continue
+    [[ "${domain}" == \#* ]] && continue
+    if [[ "${domain}" == \*.* ]]; then
+      domain="${domain#*.}"
+    fi
+    [[ -z "${domain}" ]] && continue
+    # Accept domains with dot-separated labels and a 2+ character alphabetic TLD.
+    if ! [[ "${domain}" =~ ^([[:alnum:]-]+\.)+[[:alpha:]]{2,}$ ]]; then
+      echo "Invalid domain entry in whitelist: '${original_domain}'" >&2
+      exit 1
+    fi
+    echo "${domain}"
+  done < "${WHITELIST_FILE}"
+)
+
+echo "[1/4] Creating allow-list ipset"
 ipset create "${ALLOWED_IPSET}" hash:ip family inet -exist
 ipset flush "${ALLOWED_IPSET}"
 
-echo "[4/6] Writing dnsmasq policy"
-DNSMASQ_CONF="/etc/dnsmasq.d/ai-firewall.conf"
-cat > "${DNSMASQ_CONF}" <<DNSCONF
-interface=${LAN_IF}
-bind-interfaces
-dhcp-range=${DHCP_START},${DHCP_END},${DHCP_LEASE}
-dhcp-option=option:router,${LAN_CIDR%/*}
-dhcp-option=option:dns-server,${LAN_CIDR%/*}
-log-queries
-log-dhcp
-DNSCONF
+echo "[2/4] Writing dnsmasq policy from whitelist file"
+DNSMASQ_POLICY_CONF_PATH="/etc/dnsmasq.d/ai-firewall-policy.conf"
+{
+  echo "# Managed by setup_firewall.sh"
+  for domain in "${ALLOWED_DOMAINS[@]}"; do
+    echo "ipset=/${domain}/${ALLOWED_IPSET}"
+  done
 
-for domain in "${ALLOWED_DOMAINS[@]}"; do
-  echo "ipset=/${domain}/${ALLOWED_IPSET}" >> "${DNSMASQ_CONF}"
-done
-
-for domain in "${BLOCKED_AI_DOMAINS[@]}"; do
-  echo "address=/${domain}/" >> "${DNSMASQ_CONF}"
-done
+  for domain in "${BLOCKED_AI_DOMAINS[@]}"; do
+    echo "address=/${domain}/"
+  done
+} > "${DNSMASQ_POLICY_CONF_PATH}"
 
 systemctl restart dnsmasq
 
-echo "[5/6] Applying iptables firewall"
-echo "Warning: this resets existing iptables rules on this host."
+echo "[3/4] Applying iptables firewall"
 mkdir -p /etc/iptables
 iptables-save > /etc/iptables/ai-firewall.backup.v4
 iptables -F
@@ -115,19 +102,19 @@ iptables -t nat -A POSTROUTING -o "${WAN_IF}" -j MASQUERADE
 iptables -P INPUT DROP
 iptables -P FORWARD DROP
 
-echo "[6/6] Saving rules (if persistence tools exist)"
+echo "[4/4] Saving firewall rules"
 if command -v netfilter-persistent >/dev/null 2>&1; then
   netfilter-persistent save
 elif command -v iptables-save >/dev/null 2>&1; then
-  mkdir -p /etc/iptables
   iptables-save > /etc/iptables/rules.v4
 fi
 
+ALLOWED_COUNT="${#ALLOWED_DOMAINS[@]}"
 cat <<MSG
 Firewall configured.
 LAN interface: ${LAN_IF}
 WAN interface: ${WAN_IF}
-LAN network:   ${LAN_CIDR}
-Allowed domains: ${ALLOWED_DOMAINS[*]}
+Whitelist file: ${WHITELIST_FILE}
+Allowed domains loaded: ${ALLOWED_COUNT}
 Blocked AI domains: ${BLOCKED_AI_DOMAINS[*]}
 MSG

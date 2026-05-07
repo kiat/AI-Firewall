@@ -65,7 +65,7 @@ sudo LAN_IF=enp3s0 WAN_IF=enp2s0 ./setup_firewall.sh
 
 ## Note for Instructors Using Canvas or Blackboard LMS
 
-If you use **Canvas** or **Blackboard** (or a similar LMS) to administer in-class assessments such as quizzes or tests, configure the quiz to accept connections **only from the LAN IP address of the AI-Firewall router machine** (the host where you installed this system).
+If you use **Canvas** or **Blackboard** (or a similar LMS) to administer in-class assessments such as quizzes or tests, configure the quiz to accept connections **only from the IP address of the AI-Firewall router machine** (the host where you installed this system).
 
 This ensures that students must route their traffic through the firewall to reach the quiz, so the AI-blocking and domain-allow-listing policies are enforced for the entire assessment window.
 

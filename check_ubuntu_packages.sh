@@ -20,7 +20,7 @@ if [[ "${EUID}" -ne 0 ]]; then
     exit 1
   fi
 
-  echo "Re-running with sudo to check and install firewall packages..."
+  echo "Re-running with sudo to check and install required Ubuntu packages..."
   exec sudo --preserve-env=DEBIAN_FRONTEND "$0" "$@"
 fi
 
@@ -46,4 +46,4 @@ export DEBIAN_FRONTEND="${DEBIAN_FRONTEND:-noninteractive}"
 apt-get update
 apt-get install -y "${missing_packages[@]}"
 
-echo "Firewall package requirements are installed."
+echo "Required Ubuntu packages are installed."

@@ -26,7 +26,7 @@ BLOCKED_AI_DOMAINS=(
 )
 
 if [[ "${EUID}" -ne 0 ]]; then
-  echo "Run this script as root (sudo)." >&2
+  echo "This script must be run as root." >&2
   exit 1
 fi
 
@@ -73,10 +73,7 @@ for domain in "${ALLOWED_DOMAINS[@]}"; do
 done
 
 for domain in "${BLOCKED_AI_DOMAINS[@]}"; do
-  {
-    echo "address=/${domain}/0.0.0.0"
-    echo "address=/*.${domain}/0.0.0.0"
-  } >> "${DNSMASQ_CONF}"
+  echo "address=/${domain}/" >> "${DNSMASQ_CONF}"
 done
 
 systemctl restart dnsmasq

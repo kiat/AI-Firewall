@@ -37,7 +37,12 @@ fi
 
 echo "WARNING: This script will reset all existing iptables rules. A backup will be saved to /etc/iptables/ai-firewall.backup.v4."
 
-mapfile -t ALLOWED_DOMAINS < <(
+load_domains_from_file() {
+  local file_path="$1"
+  local file_description="$2"
+  local domain
+  local original_domain
+
   while IFS= read -r domain || [[ -n "${domain}" ]]; do
     original_domain="${domain}"
     domain="$(echo "${domain}" | sed -E 's/^[[:space:]]+|[[:space:]]+$//g')"
@@ -47,31 +52,20 @@ mapfile -t ALLOWED_DOMAINS < <(
       domain="${domain#*.}"
     fi
     [[ -z "${domain}" ]] && continue
-    # Accept domains with dot-separated labels and a 2+ character alphabetic TLD.
     if ! [[ "${domain}" =~ ^([[:alnum:]-]+\.)+[[:alpha:]]{2,}$ ]]; then
-      echo "Invalid domain entry in whitelist: '${original_domain}'" >&2
+      echo "Invalid domain entry in ${file_description}: '${original_domain}'" >&2
       exit 1
     fi
     echo "${domain}"
-  done < "${WHITELIST_FILE}"
+  done < "${file_path}"
+}
+
+mapfile -t ALLOWED_DOMAINS < <(
+  load_domains_from_file "${WHITELIST_FILE}" "whitelist"
 )
 
 mapfile -t BLOCKED_AI_DOMAINS < <(
-  while IFS= read -r domain || [[ -n "${domain}" ]]; do
-    original_domain="${domain}"
-    domain="$(echo "${domain}" | sed -E 's/^[[:space:]]+|[[:space:]]+$//g')"
-    [[ -z "${domain}" ]] && continue
-    [[ "${domain}" == \#* ]] && continue
-    if [[ "${domain}" == \*.* ]]; then
-      domain="${domain#*.}"
-    fi
-    [[ -z "${domain}" ]] && continue
-    if ! [[ "${domain}" =~ ^([[:alnum:]-]+\.)+[[:alpha:]]{2,}$ ]]; then
-      echo "Invalid domain entry in blocked AI domains file: '${original_domain}'" >&2
-      exit 1
-    fi
-    echo "${domain}"
-  done < "${BLOCKED_AI_DOMAINS_FILE}"
+  load_domains_from_file "${BLOCKED_AI_DOMAINS_FILE}" "blocked AI domains file"
 )
 
 echo "[1/4] Creating allow-list ipset"

@@ -9,17 +9,24 @@ A Linux LAN/WAN classroom firewall setup that allows only approved websites and 
 
 ## Files
 
-- `setup_system_settings.sh`: configures interfaces, IP forwarding, package dependencies, and base `dnsmasq` DHCP settings
+- `check_ubuntu_packages.sh`: verifies the required Ubuntu packages are installed and installs any missing packages with `sudo`
+- `setup_system_settings.sh`: configures interfaces, IP forwarding, validates required commands, and writes the base `dnsmasq` DHCP settings
 - `setup_firewall.sh`: configures domain policy, `ipset`, and `iptables` firewall rules
 - `whitelist.txt`: allow-list domains, one domain per line
 - `blocked_ai_domains.txt`: blocked AI domains, one domain per line
 
 ## Usage
 
-1. Edit interface names at the top of each script **or** set environment variables when running the scripts.
-2. Update `whitelist.txt` with allowed domains (one per line). Use `example.com` to match both root and subdomains (`dnsmasq` `ipset=/example.com/...` behavior); `*.example.com` is also accepted and normalized.
-3. Update `blocked_ai_domains.txt` with blocked AI domains (one per line). `*.example.com` is accepted and normalized.
-4. Run both scripts as root:
+1. Run the package check script first. It will use `sudo` automatically when needed:
+
+```bash
+./check_ubuntu_packages.sh
+```
+
+2. Edit interface names at the top of each script **or** set environment variables when running the scripts.
+3. Update `whitelist.txt` with allowed domains (one per line). Use `example.com` to match both root and subdomains (`dnsmasq` `ipset=/example.com/...` behavior); `*.example.com` is also accepted and normalized.
+4. Update `blocked_ai_domains.txt` with blocked AI domains (one per line). `*.example.com` is accepted and normalized.
+5. Run both scripts as root:
 
 ```bash
 sudo ./setup_system_settings.sh

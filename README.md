@@ -2,6 +2,11 @@
 
 A Linux LAN/WAN classroom firewall setup that allows only approved websites (Canvas/Instructure, Python.org, Wikipedia) and blocks common Generative AI services (ChatGPT, Claude, Copilot).
 
+## Requirements
+
+- Ubuntu firewall host with two interfaces (LAN side + WAN side)
+- Student devices should use DHCP from this firewall so DNS requests are enforced through `dnsmasq`
+
 ## Usage
 
 Run on Ubuntu as root on a machine with two interfaces:

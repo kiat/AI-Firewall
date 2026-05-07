@@ -20,8 +20,17 @@ for interface in "${LAN_IF}" "${WAN_IF}"; do
   fi
 done
 
-if ! command -v iptables >/dev/null 2>&1 || ! command -v ipset >/dev/null 2>&1 || ! command -v dnsmasq >/dev/null 2>&1; then
-  echo "Missing required packages. Run ./check_ubuntu_packages.sh first." >&2
+required_commands=(ip iptables ipset dnsmasq)
+missing_commands=()
+
+for command_name in "${required_commands[@]}"; do
+  if ! command -v "${command_name}" >/dev/null 2>&1; then
+    missing_commands+=("${command_name}")
+  fi
+done
+
+if [[ "${#missing_commands[@]}" -gt 0 ]]; then
+  echo "Missing required commands: ${missing_commands[*]}. Run ./check_ubuntu_packages.sh first." >&2
   exit 1
 fi
 

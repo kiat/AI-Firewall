@@ -26,9 +26,13 @@ fi
 
 missing_packages=()
 
+package_is_installed() {
+  dpkg-query -W -f='${db:Status-Abbrev}' "$1" 2>/dev/null | grep -q '^ii '
+}
+
 echo "Checking required Ubuntu packages..."
 for package_name in "${REQUIRED_PACKAGES[@]}"; do
-  if dpkg-query -W -f='${Status}' "${package_name}" 2>/dev/null | grep -q '^install ok installed$'; then
+  if package_is_installed "${package_name}"; then
     echo "  - ${package_name}: installed"
   else
     echo "  - ${package_name}: missing"

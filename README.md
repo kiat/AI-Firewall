@@ -62,3 +62,22 @@ sudo LAN_IF=enp3s0 WAN_IF=enp2s0 ./setup_firewall.sh
 - Default interface placeholders are `LAN` and `WAN`; you must override them unless your system uses those exact names.
 - `setup_firewall.sh` flushes existing `iptables` rules and saves a backup at `/etc/iptables/ai-firewall.backup.v4`.
 - Both setup scripts expect `dnsmasq` to be managed by `systemctl`.
+
+## Note for Instructors Using Canvas or Blackboard LMS
+
+If you use **Canvas** or **Blackboard** (or a similar LMS) to administer in-class assessments such as quizzes or tests, configure the quiz to accept connections **only from the LAN IP address of the AI-Firewall router machine** (the host where you installed this system).
+
+This ensures that students must route their traffic through the firewall to reach the quiz, so the AI-blocking and domain-allow-listing policies are enforced for the entire assessment window.
+
+**Steps (Canvas example):**
+
+1. Open the quiz editor and go to the **Details** tab.
+2. Locate the **IP Address Filter** (or *Allowed IPs*) setting.
+3. Enter the **LAN IP address of the firewall router** — for example `10.20.30.1` — as the only allowed address.
+4. Save the quiz.
+
+Students connecting from outside the filtered network will be denied access, preventing use of AI tools hosted on blocked domains.
+
+> **Blackboard:** Go to *Test Options → IP Address Restrictions* and add the same firewall LAN IP.
+
+![Canvas Quiz IP Filtering](canvas_quiz_ip_filter.png)

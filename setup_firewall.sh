@@ -159,6 +159,12 @@ mapfile -t BLOCKED_AI_DOMAINS < <(
 )
 
 echo "[1/4] Creating allow-list ipset"
+if ipset list -n | grep -Fxq "${ALLOWED_IPSET}"; then
+  existing_ipset_type="$(ipset list "${ALLOWED_IPSET}" | awk -F': ' '/^Type:/{print $2; exit}')"
+  if [[ "${existing_ipset_type}" != "hash:net" ]]; then
+    ipset destroy "${ALLOWED_IPSET}"
+  fi
+fi
 ipset create "${ALLOWED_IPSET}" hash:net family inet -exist
 ipset flush "${ALLOWED_IPSET}"
 

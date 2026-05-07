@@ -1,41 +1,64 @@
 # AI-Firewall
 
-A Linux LAN/WAN classroom firewall setup that allows only approved websites and blocks common Generative AI services.
+Ubuntu LAN/WAN firewall scripts for classrooms: allow approved websites and block common Generative AI services.
 
-## Requirements
+## What these scripts do
 
-- Ubuntu firewall host with two interfaces (LAN side + WAN side)
-- Student devices should use DHCP from this firewall so DNS requests are enforced through `dnsmasq`
+- `check_ubuntu_packages.sh`
+  - Checks for required Ubuntu packages and installs missing ones.
+  - Re-runs itself with `sudo` if needed.
+- `setup_system_settings.sh`
+  - Validates LAN/WAN interfaces exist.
+  - Brings interfaces up, sets LAN IP/CIDR, attempts WAN DHCP when needed.
+  - Enables IPv4 forwarding.
+  - Writes base DHCP/DNS config to `/etc/dnsmasq.d/ai-firewall-base.conf`.
+- `setup_firewall.sh`
+  - Validates LAN/WAN interfaces and input files.
+  - Loads allow-list domains into `ipset` via `dnsmasq`.
+  - Blocks listed AI domains by writing null-address records in `dnsmasq`.
+  - Resets and applies `iptables` rules (backs up current rules first).
+  - Writes policy to `/etc/dnsmasq.d/ai-firewall-policy.conf`.
+- `whitelist.txt`
+  - Allowed domains, one domain per line.
+- `blocked_ai_domains.txt`
+  - Blocked AI domains, one domain per line.
 
-## Files
+## Fresh Ubuntu setup (recommended order)
 
-- `check_ubuntu_packages.sh`: verifies the required Ubuntu packages are installed and installs any missing packages with `sudo`
-- `setup_system_settings.sh`: configures interfaces, IP forwarding, validates required commands, and writes the base `dnsmasq` DHCP settings
-- `setup_firewall.sh`: configures domain policy, `ipset`, and `iptables` firewall rules
-- `whitelist.txt`: allow-list domains, one domain per line
-- `blocked_ai_domains.txt`: blocked AI domains, one domain per line
+1. On the firewall host, clone this repo and enter it.
+2. Identify your interface names:
 
-## Usage
+```bash
+ip -br link
+```
 
-1. Run the package check script first. It will use `sudo` automatically when needed:
+3. Review domain policy files:
+   - Edit `whitelist.txt` for allowed domains.
+   - Edit `blocked_ai_domains.txt` for blocked AI domains.
+   - `*.example.com` is accepted and normalized to `example.com`.
+4. Install/check required packages:
 
 ```bash
 ./check_ubuntu_packages.sh
 ```
 
-2. Edit interface names at the top of each script **or** set environment variables when running the scripts.
-3. Update `whitelist.txt` with allowed domains (one per line). Use `example.com` to match both root and subdomains (`dnsmasq` `ipset=/example.com/...` behavior); `*.example.com` is also accepted and normalized.
-4. Update `blocked_ai_domains.txt` with blocked AI domains (one per line). `*.example.com` is accepted and normalized.
-5. Run both scripts as root:
+5. Run system setup with your real interfaces and LAN settings:
 
 ```bash
-sudo ./setup_system_settings.sh
-sudo ./setup_firewall.sh
+sudo LAN_IF=enp3s0 WAN_IF=enp2s0 LAN_CIDR=10.20.30.1/24 DHCP_START=10.20.30.50 DHCP_END=10.20.30.200 DHCP_LEASE=12h ./setup_system_settings.sh
 ```
 
-Optional environment-variable overrides:
+6. Apply firewall policy:
 
 ```bash
-sudo LAN_IF=enp3s0 WAN_IF=enp2s0 LAN_CIDR=10.10.10.1/24 DHCP_START=10.10.10.50 DHCP_END=10.10.10.200 ./setup_system_settings.sh
-sudo LAN_IF=enp3s0 WAN_IF=enp2s0 WHITELIST_FILE=/path/to/whitelist.txt BLOCKED_AI_DOMAINS_FILE=/path/to/blocked_ai_domains.txt ./setup_firewall.sh
+sudo LAN_IF=enp3s0 WAN_IF=enp2s0 ./setup_firewall.sh
 ```
+
+7. Point student devices to this firewall for DHCP/DNS (or set DNS manually to the firewall LAN IP) so filtering is enforced.
+
+## Important notes
+
+- Run setup scripts as root (`sudo`).
+- Default interface placeholders are `LAN` and `WAN`; you must override them unless your system uses those exact names.
+- `setup_firewall.sh` flushes existing `iptables` rules and saves a backup at `/etc/iptables/ai-firewall.backup.v4`.
+- Both setup scripts expect `dnsmasq` to be managed by `systemctl`.

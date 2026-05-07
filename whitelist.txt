@@ -1,4 +1,15 @@
-canvas.instructure.com
+# Canvas UT Austin LMS and authentication dependencies
+canvas.utexas.edu
+login.utexas.edu
+eid.utexas.edu
+utexas.edu
 instructure.com
-python.org
-wikipedia.org
+canvaslms.com
+instructuremedia.com
+cloudfront.net
+amazonaws.com
+duosecurity.com
+
+# Optional direct network allow-list entries (supported by setup_firewall.sh)
+# 128.83.0.0/16
+# 18.160.0.0/12

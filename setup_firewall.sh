@@ -38,6 +38,19 @@ if ! command -v iptables >/dev/null 2>&1 || ! command -v ipset >/dev/null 2>&1 |
   exit 1
 fi
 
+mapfile -t ALLOWED_DOMAINS < <(
+  while IFS= read -r domain || [[ -n "${domain}" ]]; do
+    domain="$(echo "${domain}" | sed -E 's/^[[:space:]]+|[[:space:]]+$//g')"
+    [[ -z "${domain}" ]] && continue
+    [[ "${domain}" == \#* ]] && continue
+    if [[ "${domain}" == \*.* ]]; then
+      domain="${domain#*.}"
+    fi
+    [[ -z "${domain}" ]] && continue
+    echo "${domain}"
+  done < "${WHITELIST_FILE}"
+)
+
 echo "[1/4] Creating allow-list ipset"
 ipset create "${ALLOWED_IPSET}" hash:ip family inet -exist
 ipset flush "${ALLOWED_IPSET}"
@@ -46,12 +59,9 @@ echo "[2/4] Writing dnsmasq policy from whitelist file"
 DNSMASQ_POLICY_CONF="/etc/dnsmasq.d/ai-firewall-policy.conf"
 {
   echo "# Managed by setup_firewall.sh"
-  while IFS= read -r domain || [[ -n "${domain}" ]]; do
-    domain="$(echo "${domain}" | sed -E 's/^[[:space:]]+|[[:space:]]+$//g')"
-    [[ -z "${domain}" ]] && continue
-    [[ "${domain}" == \#* ]] && continue
+  for domain in "${ALLOWED_DOMAINS[@]}"; do
     echo "ipset=/${domain}/${ALLOWED_IPSET}"
-  done < "${WHITELIST_FILE}"
+  done
 
   for domain in "${BLOCKED_AI_DOMAINS[@]}"; do
     echo "address=/${domain}/"
@@ -94,7 +104,7 @@ elif command -v iptables-save >/dev/null 2>&1; then
   iptables-save > /etc/iptables/rules.v4
 fi
 
-ALLOWED_COUNT="$(grep -Ev '^[[:space:]]*(#|$)' "${WHITELIST_FILE}" | wc -l | tr -d ' ')"
+ALLOWED_COUNT="${#ALLOWED_DOMAINS[@]}"
 
 cat <<MSG
 Firewall configured.

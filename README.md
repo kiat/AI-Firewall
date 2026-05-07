@@ -11,12 +11,12 @@ A Linux LAN/WAN classroom firewall setup that allows only approved websites and 
 
 - `setup_system_settings.sh`: configures interfaces, IP forwarding, package dependencies, and base `dnsmasq` DHCP settings
 - `setup_firewall.sh`: configures domain policy, `ipset`, and `iptables` firewall rules
-- `whitelist.txt`: allow-list domains, one domain per line (supports subdomain wildcards like `*.example.com`)
+- `whitelist.txt`: allow-list domains, one domain per line
 
 ## Usage
 
 1. Edit interface names at the top of each script **or** set environment variables when running the scripts.
-2. Update `whitelist.txt` with allowed domains (one per line).
+2. Update `whitelist.txt` with allowed domains (one per line). Use `example.com` to match both root and subdomains; `*.example.com` is also accepted and normalized.
 3. Run both scripts as root:
 
 ```bash

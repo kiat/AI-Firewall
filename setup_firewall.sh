@@ -106,7 +106,6 @@ echo "[4/4] Saving firewall rules"
 if command -v netfilter-persistent >/dev/null 2>&1; then
   netfilter-persistent save
 elif command -v iptables-save >/dev/null 2>&1; then
-  mkdir -p /etc/iptables
   iptables-save > /etc/iptables/rules.v4
 fi
 

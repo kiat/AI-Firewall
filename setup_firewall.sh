@@ -38,8 +38,11 @@ if ! command -v iptables >/dev/null 2>&1 || ! command -v ipset >/dev/null 2>&1 |
   exit 1
 fi
 
+echo "Warning: this script resets existing iptables rules on this host."
+
 mapfile -t ALLOWED_DOMAINS < <(
   while IFS= read -r domain || [[ -n "${domain}" ]]; do
+    original_domain="${domain}"
     domain="$(echo "${domain}" | sed -E 's/^[[:space:]]+|[[:space:]]+$//g')"
     [[ -z "${domain}" ]] && continue
     [[ "${domain}" == \#* ]] && continue
@@ -47,6 +50,10 @@ mapfile -t ALLOWED_DOMAINS < <(
       domain="${domain#*.}"
     fi
     [[ -z "${domain}" ]] && continue
+    if ! [[ "${domain}" =~ ^([[:alnum:]-]+\.)+[[:alpha:]]{2,}$ ]]; then
+      echo "Invalid domain entry in whitelist: '${original_domain}'" >&2
+      exit 1
+    fi
     echo "${domain}"
   done < "${WHITELIST_FILE}"
 )
@@ -71,7 +78,6 @@ DNSMASQ_POLICY_CONF="/etc/dnsmasq.d/ai-firewall-policy.conf"
 systemctl restart dnsmasq
 
 echo "[3/4] Applying iptables firewall"
-echo "Warning: this resets existing iptables rules on this host."
 mkdir -p /etc/iptables
 iptables-save > /etc/iptables/ai-firewall.backup.v4
 iptables -F

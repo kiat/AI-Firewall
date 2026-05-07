@@ -37,7 +37,7 @@ if ! ip route show default | grep -qw "dev ${WAN_IF}"; then
   if ip -4 addr show dev "${WAN_IF}" | grep -q "inet "; then
     echo "Info: No default route via ${WAN_IF}; existing static/interface IP configuration detected."
   elif ! dhclient -1 -v "${WAN_IF}"; then
-    echo "Warning: Unable to obtain DHCP lease on ${WAN_IF}. WAN internet may be unavailable." >&2
+    echo "Warning: Unable to obtain DHCP lease on ${WAN_IF}. Continuing, but WAN internet may be unavailable." >&2
   fi
 fi
 

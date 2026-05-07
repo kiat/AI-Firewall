@@ -21,7 +21,7 @@ for interface in "${LAN_IF}" "${WAN_IF}"; do
 done
 
 if ! command -v iptables >/dev/null 2>&1 || ! command -v ipset >/dev/null 2>&1 || ! command -v dnsmasq >/dev/null 2>&1; then
-  echo "Missing required packages. Run ./setup_system_settings.sh first." >&2
+  echo "Missing required packages. Run ./check_ubuntu_packages.sh first." >&2
   exit 1
 fi
 

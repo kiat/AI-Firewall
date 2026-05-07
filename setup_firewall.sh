@@ -63,7 +63,7 @@ ipset create "${ALLOWED_IPSET}" hash:ip family inet -exist
 ipset flush "${ALLOWED_IPSET}"
 
 echo "[2/4] Writing dnsmasq policy from whitelist file"
-DNSMASQ_POLICY_CONF="/etc/dnsmasq.d/ai-firewall-policy.conf"
+DNSMASQ_POLICY_CONF_PATH="/etc/dnsmasq.d/ai-firewall-policy.conf"
 {
   echo "# Managed by setup_firewall.sh"
   for domain in "${ALLOWED_DOMAINS[@]}"; do
@@ -73,7 +73,7 @@ DNSMASQ_POLICY_CONF="/etc/dnsmasq.d/ai-firewall-policy.conf"
   for domain in "${BLOCKED_AI_DOMAINS[@]}"; do
     echo "address=/${domain}/"
   done
-} > "${DNSMASQ_POLICY_CONF}"
+} > "${DNSMASQ_POLICY_CONF_PATH}"
 
 systemctl restart dnsmasq
 

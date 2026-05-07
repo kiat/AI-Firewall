@@ -48,8 +48,8 @@ if ! grep -q '^net.ipv4.ip_forward=1$' /etc/sysctl.conf; then
 fi
 
 echo "[3/4] Writing base dnsmasq config"
-DNSMASQ_BASE_CONF="/etc/dnsmasq.d/ai-firewall-base.conf"
-cat > "${DNSMASQ_BASE_CONF}" <<DNSCONF
+DNSMASQ_BASE_CONF_PATH="/etc/dnsmasq.d/ai-firewall-base.conf"
+cat > "${DNSMASQ_BASE_CONF_PATH}" <<DNSCONF
 interface=${LAN_IF}
 bind-interfaces
 dhcp-range=${DHCP_START},${DHCP_END},${DHCP_LEASE}

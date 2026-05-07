@@ -73,11 +73,11 @@ This ensures that students must route their traffic through the firewall to reac
 
 1. Open the quiz editor and go to the **Details** tab.
 2. Locate the **IP Address Filter** (or *Allowed IPs*) setting.
-3. Enter the **LAN IP address of the firewall router** — for example `10.20.30.1` — as the only allowed address. If your institution uses load balancers or proxies, you may need to add those IPs as well, or use CIDR notation (e.g. `10.20.30.0/24`). Consult your network administrator if you are unsure.
+3. Enter the **WAN IP address of the firewall router** — for example `128.83.120.168` — as the only allowed address. If your institution uses load balancers or proxies, you may need to add those IPs as well, or use CIDR notation (e.g. `10.20.30.0/24`). Consult your network administrator if you are unsure.
 4. Save the quiz.
 
 Students connecting from outside the filtered network will be denied access to the quiz, ensuring all their traffic is subject to the firewall's AI-blocking and domain-allow-listing policies.
 
 > **Blackboard:** Go to *Test Options → IP Address Restrictions* and add the same firewall LAN IP.
 
-![Canvas Quiz IP Filtering](canvas_quiz_ip_filter.png)
+![Canvas Quiz IP Filtering](ip-filters-2-4.png)

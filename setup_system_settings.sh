@@ -15,6 +15,10 @@ HOTSPOT_SSID="${HOTSPOT_SSID:-MyFilteredHotspot}"
 HOTSPOT_HW_MODE="${HOTSPOT_HW_MODE:-g}"
 HOTSPOT_CHANNEL="${HOTSPOT_CHANNEL:-6}"
 HOTSPOT_WPA_PASSPHRASE="${HOTSPOT_WPA_PASSPHRASE:-}"
+NFT_NAT_TABLE="${NFT_NAT_TABLE:-ai_firewall_nat}"
+NFT_FILTER_TABLE="${NFT_FILTER_TABLE:-ai_firewall_filter}"
+NFT_NAT_CHAIN="${NFT_NAT_CHAIN:-ai_firewall_postrouting}"
+NFT_FORWARD_CHAIN="${NFT_FORWARD_CHAIN:-ai_firewall_forward}"
 
 if [[ "${EUID}" -ne 0 ]]; then
   echo "This script must be run as root." >&2
@@ -105,6 +109,7 @@ wpa_passphrase=${HOTSPOT_WPA_PASSPHRASE}
 wpa_key_mgmt=WPA-PSK
 rsn_pairwise=CCMP
 HOSTAPD
+chmod 600 "${HOSTAPD_CONF}"
 
 HOSTAPD_DEFAULT_CONF="/etc/default/hostapd"
 if [[ -f "${HOSTAPD_DEFAULT_CONF}" ]]; then
@@ -141,27 +146,55 @@ log-queries
 DNSCONF
 
 echo "[5/7] Applying nftables NAT/forwarding"
-if ! nft list table ip nat >/dev/null 2>&1; then
-  nft add table ip nat
+if ! nft list table ip "${NFT_NAT_TABLE}" >/dev/null 2>&1; then
+  nft add table ip "${NFT_NAT_TABLE}"
 fi
-if ! nft list chain ip nat postrouting >/dev/null 2>&1; then
-  nft add chain ip nat postrouting '{ type nat hook postrouting priority 100 ; }'
+if ! nft list chain ip "${NFT_NAT_TABLE}" "${NFT_NAT_CHAIN}" >/dev/null 2>&1; then
+  nft add chain ip "${NFT_NAT_TABLE}" "${NFT_NAT_CHAIN}" '{ type nat hook postrouting priority 100 ; policy accept ; }'
 fi
-nft flush chain ip nat postrouting
-nft add rule ip nat postrouting oifname "${WAN_IF}" masquerade
+nft flush chain ip "${NFT_NAT_TABLE}" "${NFT_NAT_CHAIN}"
+nft add rule ip "${NFT_NAT_TABLE}" "${NFT_NAT_CHAIN}" oifname "${WAN_IF}" masquerade
 
-if ! nft list table ip filter >/dev/null 2>&1; then
-  nft add table ip filter
+if ! nft list table ip "${NFT_FILTER_TABLE}" >/dev/null 2>&1; then
+  nft add table ip "${NFT_FILTER_TABLE}"
 fi
-if ! nft list chain ip filter forward >/dev/null 2>&1; then
-  nft add chain ip filter forward '{ type filter hook forward priority 0 ; policy drop ; }'
+if ! nft list chain ip "${NFT_FILTER_TABLE}" "${NFT_FORWARD_CHAIN}" >/dev/null 2>&1; then
+  nft add chain ip "${NFT_FILTER_TABLE}" "${NFT_FORWARD_CHAIN}" '{ type filter hook forward priority 0 ; policy accept ; }'
 fi
-nft flush chain ip filter forward
-nft add rule ip filter forward iifname "${LAN_IF}" oifname "${WAN_IF}" accept
-nft add rule ip filter forward iifname "${WAN_IF}" oifname "${LAN_IF}" ct state related,established accept
+nft flush chain ip "${NFT_FILTER_TABLE}" "${NFT_FORWARD_CHAIN}"
+nft add rule ip "${NFT_FILTER_TABLE}" "${NFT_FORWARD_CHAIN}" iifname "${LAN_IF}" oifname "${WAN_IF}" accept
+nft add rule ip "${NFT_FILTER_TABLE}" "${NFT_FORWARD_CHAIN}" iifname "${WAN_IF}" oifname "${LAN_IF}" ct state related,established accept
 
 echo "[6/7] Persisting nftables rules"
-nft list ruleset > /etc/nftables.conf
+mkdir -p /etc/nftables.d
+NFTAIFW_CONF="/etc/nftables.d/ai-firewall.nft"
+cat > "${NFTAIFW_CONF}" <<NFTCONF
+table ip ${NFT_NAT_TABLE} {
+  chain ${NFT_NAT_CHAIN} {
+    type nat hook postrouting priority 100; policy accept;
+    oifname "${WAN_IF}" masquerade
+  }
+}
+
+table ip ${NFT_FILTER_TABLE} {
+  chain ${NFT_FORWARD_CHAIN} {
+    type filter hook forward priority 0; policy accept;
+    iifname "${LAN_IF}" oifname "${WAN_IF}" accept
+    iifname "${WAN_IF}" oifname "${LAN_IF}" ct state related,established accept
+  }
+}
+NFTCONF
+
+if [[ ! -f /etc/nftables.conf ]]; then
+  cat > /etc/nftables.conf <<'MAINNFT'
+#!/usr/sbin/nft -f
+flush ruleset
+include "/etc/nftables.d/*.nft"
+MAINNFT
+elif ! grep -q 'include "/etc/nftables.d/\*.nft"' /etc/nftables.conf; then
+  echo 'include "/etc/nftables.d/*.nft"' >> /etc/nftables.conf
+fi
+
 systemctl enable nftables >/dev/null
 
 echo "[7/7] Restarting dnsmasq"

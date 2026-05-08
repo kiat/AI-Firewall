@@ -13,7 +13,7 @@ This project is a simple Linux LAN/WAN Firewall scripts for classrooms. It can b
   - Brings the LAN (WiFi hotspot) interface up and assigns a static IP via netplan (`/etc/netplan/01-hotspot.yaml`), then runs `netplan apply`.
   - Configures and starts `hostapd` using `/etc/hostapd/hostapd.conf` and `/etc/default/hostapd`.
   - Enables IPv4 forwarding.
-  - Applies base `nftables` NAT and forwarding rules for LAN → WAN routing.
+  - Applies base `nftables` NAT and forwarding rules for LAN → WAN routing (in dedicated `ai_firewall_*` tables/chains).
   - Writes base DNS/DHCP config to `/etc/dnsmasq.d/ai-firewall-base.conf` (includes DHCP range, upstream DNS servers, and DNS hardening options).
 - `setup_firewall.sh`
   - Validates LAN/WAN interfaces and input files.
@@ -51,7 +51,7 @@ ip -br link
 sudo LAN_IF=wlx984827c3f4db WAN_IF=wlp3s0 LAN_CIDR=10.10.0.1/24 HOTSPOT_SSID=MyFilteredHotspot HOTSPOT_WPA_PASSPHRASE=StrongPassword123 ./setup_system_settings.sh
 ```
 
-This writes `/etc/netplan/01-hotspot.yaml`, applies it (assigning the static IP to the hotspot interface), writes `/etc/hostapd/hostapd.conf`, links it via `/etc/default/hostapd`, starts hostapd, enables IPv4 forwarding, configures base nftables NAT/forwarding rules, persists them to `/etc/nftables.conf` (and enables `nftables`), and configures dnsmasq DHCP/DNS service on the hotspot interface.
+This writes `/etc/netplan/01-hotspot.yaml`, applies it (assigning the static IP to the hotspot interface), writes `/etc/hostapd/hostapd.conf` (with restricted file permissions), links it via `/etc/default/hostapd`, starts hostapd, enables IPv4 forwarding, configures base nftables NAT/forwarding rules, persists them to `/etc/nftables.d/ai-firewall.nft` (and enables `nftables`), and configures dnsmasq DHCP/DNS service on the hotspot interface.
 `HOTSPOT_WPA_PASSPHRASE` is required and must be 8-63 characters.
 
 6. Configure the WAN interface manually using your preferred network configuration method.

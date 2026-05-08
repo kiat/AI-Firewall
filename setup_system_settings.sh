@@ -130,7 +130,6 @@ sysctl -w net.ipv4.ip_forward=1 >/dev/null
 if ! grep -q '^net.ipv4.ip_forward=1$' /etc/sysctl.conf; then
   echo 'net.ipv4.ip_forward=1' >> /etc/sysctl.conf
 fi
-sysctl -p >/dev/null
 
 echo "[4/7] Writing base dnsmasq config"
 DNSMASQ_BASE_CONF_PATH="/etc/dnsmasq.d/ai-firewall-base.conf"

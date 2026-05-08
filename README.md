@@ -62,7 +62,7 @@ This writes `/etc/netplan/01-hotspot.yaml`, applies it (assigning the static IP 
 sudo LAN_IF=wlx984827c3f4db WAN_IF=wlp3s0 ./setup_firewall.sh
 ```
 
-8. Configure student devices with LAN IP settings (for example, a static address in `10.20.30.0/24` if you used `10.20.30.1/24` on the firewall) and point DNS to the firewall LAN IP so filtering is enforced. If you want automatic client addressing, provide DHCP separately.
+8. Configure student devices to use DHCP on the LAN hotspot (provided by `setup_system_settings.sh`) and use the firewall LAN IP as DNS so filtering is enforced. Static LAN addressing is optional if your deployment requires it.
 
 ## Important notes
 

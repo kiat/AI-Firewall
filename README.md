@@ -63,6 +63,7 @@ sudo LAN_IF=enp3s0 WAN_IF=enp2s0 ./setup_firewall.sh
 
 - Run setup scripts as root (`sudo`).
 - Default interface placeholders are `LAN` and `WAN`; you must override them unless your system uses those exact names.
+- `setup_system_settings.sh` configures only the LAN static IP and DNS listener; it does not configure WAN or DHCP for clients.
 - `setup_firewall.sh` flushes existing `iptables` rules and saves a backup at `/etc/iptables/ai-firewall.backup.v4`.
 - Both setup scripts expect `dnsmasq` to be managed by `systemctl`.
 

@@ -15,7 +15,7 @@ if ! ip link show "${LAN_IF}" >/dev/null 2>&1; then
   exit 1
 fi
 
-required_commands=(ip dnsmasq)
+required_commands=(ip netplan dnsmasq)
 missing_commands=()
 
 for command_name in "${required_commands[@]}"; do
@@ -29,10 +29,38 @@ if [[ "${#missing_commands[@]}" -gt 0 ]]; then
   exit 1
 fi
 
-echo "[1/4] Configuring LAN interface"
+# Derive DHCP range and netmask from LAN_CIDR using bash integer arithmetic.
+LAN_IP="${LAN_CIDR%%/*}"
+LAN_PREFIX="${LAN_CIDR##*/}"
+
+_p="${LAN_PREFIX}"
+_mask=$(( (0xFFFFFFFF << (32 - _p)) & 0xFFFFFFFF ))
+IFS='.' read -r _o1 _o2 _o3 _o4 <<< "${LAN_IP}"
+_ip_int=$(( (_o1 << 24) | (_o2 << 16) | (_o3 << 8) | _o4 ))
+_net_int=$(( _ip_int & _mask ))
+_start=$(( _net_int + 10 ))
+_end=$(( _net_int + 100 ))
+DHCP_START="$(( (_start >> 24) & 0xFF )).$(( (_start >> 16) & 0xFF )).$(( (_start >> 8) & 0xFF )).$(( _start & 0xFF ))"
+DHCP_END="$(( (_end >> 24) & 0xFF )).$(( (_end >> 16) & 0xFF )).$(( (_end >> 8) & 0xFF )).$(( _end & 0xFF ))"
+NETMASK="$(( (_mask >> 24) & 0xFF )).$(( (_mask >> 16) & 0xFF )).$(( (_mask >> 8) & 0xFF )).$(( _mask & 0xFF ))"
+
+echo "[1/4] Configuring LAN hotspot interface via netplan"
 ip link set "${LAN_IF}" up
-ip addr flush dev "${LAN_IF}"
-ip addr add "${LAN_CIDR}" dev "${LAN_IF}"
+
+NETPLAN_CONF="/etc/netplan/01-hotspot.yaml"
+mkdir -p /etc/netplan
+cat > "${NETPLAN_CONF}" <<NETPLAN
+network:
+  version: 2
+  renderer: NetworkManager
+  wifis:
+    ${LAN_IF}:
+      dhcp4: no
+      addresses:
+        - ${LAN_CIDR}
+NETPLAN
+
+netplan apply
 
 echo "[2/4] Enabling IPv4 forwarding"
 sysctl -w net.ipv4.ip_forward=1 >/dev/null
@@ -45,6 +73,11 @@ DNSMASQ_BASE_CONF_PATH="/etc/dnsmasq.d/ai-firewall-base.conf"
 cat > "${DNSMASQ_BASE_CONF_PATH}" <<DNSCONF
 interface=${LAN_IF}
 bind-interfaces
+dhcp-range=${DHCP_START},${DHCP_END},${NETMASK},12h
+domain-needed
+bogus-priv
+server=8.8.8.8
+server=1.1.1.1
 log-queries
 DNSCONF
 
@@ -54,6 +87,7 @@ systemctl restart dnsmasq
 cat <<MSG
 System settings configured.
 LAN interface: ${LAN_IF}
-LAN network:   ${LAN_CIDR}
+LAN address:   ${LAN_CIDR}
+DHCP range:    ${DHCP_START} – ${DHCP_END}  (netmask ${NETMASK})
 WAN setup:     configure manually before running setup_firewall.sh
 MSG

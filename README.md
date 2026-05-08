@@ -10,9 +10,9 @@ This project is a simple Linux LAN/WAN Firewall scripts for classrooms. It can b
   - Re-runs itself with `sudo` if needed.
 - `setup_system_settings.sh`
   - Validates the LAN interface exists.
-  - Brings the LAN interface up and sets its static IP/CIDR.
+  - Brings the LAN (WiFi hotspot) interface up and assigns a static IP via netplan (`/etc/netplan/01-hotspot.yaml`), then runs `netplan apply`.
   - Enables IPv4 forwarding.
-  - Writes base DNS config to `/etc/dnsmasq.d/ai-firewall-base.conf`.
+  - Writes base DNS/DHCP config to `/etc/dnsmasq.d/ai-firewall-base.conf` (includes DHCP range, upstream DNS servers, and DNS hardening options).
 - `setup_firewall.sh`
   - Validates LAN/WAN interfaces and input files.
   - Loads allow-list domains into `ipset` via `dnsmasq`.
@@ -43,11 +43,13 @@ ip -br link
 ./check_ubuntu_packages.sh
 ```
 
-5. Run system setup with your real LAN interface and LAN settings:
+5. Run system setup with your real LAN (WiFi hotspot) interface name and IP settings:
 
 ```bash
-sudo LAN_IF=enp3s0 LAN_CIDR=10.20.30.1/24 ./setup_system_settings.sh
+sudo LAN_IF=wlx984827c3f4db LAN_CIDR=10.10.0.1/24 ./setup_system_settings.sh
 ```
+
+This writes `/etc/netplan/01-hotspot.yaml`, applies it (assigning the static IP to the hotspot interface), and configures dnsmasq to serve DHCP and DNS on that interface.
 
 6. Configure the WAN interface manually using your preferred network configuration method.
 
@@ -63,7 +65,7 @@ sudo LAN_IF=enp3s0 WAN_IF=enp2s0 ./setup_firewall.sh
 
 - Run setup scripts as root (`sudo`).
 - Default interface placeholders are `LAN` and `WAN`; you must override them unless your system uses those exact names.
-- `setup_system_settings.sh` configures only the LAN static IP and DNS listener; it does not configure WAN or DHCP for clients.
+- `setup_system_settings.sh` assigns a static IP to the hotspot interface via netplan and configures dnsmasq as a DHCP/DNS server; it does not configure WAN.
 - `setup_firewall.sh` flushes existing `iptables` rules and saves a backup at `/etc/iptables/ai-firewall.backup.v4`.
 - Both setup scripts expect `dnsmasq` to be managed by `systemctl`.
 

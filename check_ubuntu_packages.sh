@@ -8,6 +8,7 @@ REQUIRED_PACKAGES=(
   dnsmasq
   isc-dhcp-client
   iptables-persistent
+  netplan.io
 )
 
 if ! command -v apt-get >/dev/null 2>&1 || ! command -v dpkg-query >/dev/null 2>&1; then

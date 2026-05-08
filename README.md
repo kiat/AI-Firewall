@@ -52,6 +52,7 @@ sudo LAN_IF=wlx984827c3f4db WAN_IF=wlp3s0 LAN_CIDR=10.10.0.1/24 HOTSPOT_SSID=MyF
 ```
 
 This writes `/etc/netplan/01-hotspot.yaml`, applies it (assigning the static IP to the hotspot interface), writes `/etc/hostapd/hostapd.conf`, links it via `/etc/default/hostapd`, starts hostapd, enables IPv4 forwarding, configures base nftables NAT/forwarding rules, persists them to `/etc/nftables.conf` (and enables `nftables`), and configures dnsmasq DHCP/DNS service on the hotspot interface.
+`HOTSPOT_WPA_PASSPHRASE` is required and must be 8-63 characters.
 
 6. Configure the WAN interface manually using your preferred network configuration method.
 

@@ -14,7 +14,7 @@ HOSTAPD_DRIVER="${HOSTAPD_DRIVER:-nl80211}"
 HOTSPOT_SSID="${HOTSPOT_SSID:-MyFilteredHotspot}"
 HOTSPOT_HW_MODE="${HOTSPOT_HW_MODE:-g}"
 HOTSPOT_CHANNEL="${HOTSPOT_CHANNEL:-6}"
-HOTSPOT_WPA_PASSPHRASE="${HOTSPOT_WPA_PASSPHRASE:-StrongPassword123}"
+HOTSPOT_WPA_PASSPHRASE="${HOTSPOT_WPA_PASSPHRASE:-}"
 
 if [[ "${EUID}" -ne 0 ]]; then
   echo "This script must be run as root." >&2
@@ -60,12 +60,17 @@ DHCP_START="$(( (_start >> 24) & 0xFF )).$(( (_start >> 16) & 0xFF )).$(( (_star
 DHCP_END="$(( (_end >> 24) & 0xFF )).$(( (_end >> 16) & 0xFF )).$(( (_end >> 8) & 0xFF )).$(( _end & 0xFF ))"
 NETMASK="$(( (_mask >> 24) & 0xFF )).$(( (_mask >> 16) & 0xFF )).$(( (_mask >> 8) & 0xFF )).$(( _mask & 0xFF ))"
 
+if [[ -z "${HOTSPOT_WPA_PASSPHRASE}" ]]; then
+  echo "HOTSPOT_WPA_PASSPHRASE is required (8-63 characters)." >&2
+  exit 1
+fi
+
 if (( ${#HOTSPOT_WPA_PASSPHRASE} < 8 || ${#HOTSPOT_WPA_PASSPHRASE} > 63 )); then
   echo "HOTSPOT_WPA_PASSPHRASE must be between 8 and 63 characters." >&2
   exit 1
 fi
 
-echo "[1/6] Configuring LAN hotspot interface via netplan"
+echo "[1/7] Configuring LAN hotspot interface via netplan"
 ip link set "${LAN_IF}" up
 
 NETPLAN_CONF="/etc/netplan/01-hotspot.yaml"
@@ -83,7 +88,7 @@ NETPLAN
 
 netplan apply
 
-echo "[2/6] Configuring hostapd hotspot"
+echo "[2/7] Configuring hostapd hotspot"
 HOSTAPD_CONF="/etc/hostapd/hostapd.conf"
 mkdir -p /etc/hostapd
 cat > "${HOSTAPD_CONF}" <<HOSTAPD
@@ -115,14 +120,14 @@ EOF
 fi
 systemctl enable --now hostapd
 
-echo "[3/6] Enabling IPv4 forwarding"
+echo "[3/7] Enabling IPv4 forwarding"
 sysctl -w net.ipv4.ip_forward=1 >/dev/null
 if ! grep -q '^net.ipv4.ip_forward=1$' /etc/sysctl.conf; then
   echo 'net.ipv4.ip_forward=1' >> /etc/sysctl.conf
 fi
 sysctl -p >/dev/null
 
-echo "[4/6] Writing base dnsmasq config"
+echo "[4/7] Writing base dnsmasq config"
 DNSMASQ_BASE_CONF_PATH="/etc/dnsmasq.d/ai-firewall-base.conf"
 cat > "${DNSMASQ_BASE_CONF_PATH}" <<DNSCONF
 interface=${LAN_IF}
@@ -135,7 +140,7 @@ server=1.1.1.1
 log-queries
 DNSCONF
 
-echo "[5/6] Applying nftables NAT/forwarding"
+echo "[5/7] Applying nftables NAT/forwarding"
 if ! nft list table ip nat >/dev/null 2>&1; then
   nft add table ip nat
 fi

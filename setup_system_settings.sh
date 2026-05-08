@@ -64,8 +64,8 @@ DHCP_START="$(( (_start >> 24) & 0xFF )).$(( (_start >> 16) & 0xFF )).$(( (_star
 DHCP_END="$(( (_end >> 24) & 0xFF )).$(( (_end >> 16) & 0xFF )).$(( (_end >> 8) & 0xFF )).$(( _end & 0xFF ))"
 NETMASK="$(( (_mask >> 24) & 0xFF )).$(( (_mask >> 16) & 0xFF )).$(( (_mask >> 8) & 0xFF )).$(( _mask & 0xFF ))"
 
-if ! LC_ALL=C printf '%s' "${HOTSPOT_WPA_PASSPHRASE}" | grep -qE '^[ -~]{8,63}$'; then
-  echo "HOTSPOT_WPA_PASSPHRASE is required and must be 8-63 printable ASCII characters." >&2
+if ! LC_ALL=C printf '%s' "${HOTSPOT_WPA_PASSPHRASE}" | grep -qE '^[A-Za-z0-9._@%+=,:/-]{8,63}$'; then
+  echo "HOTSPOT_WPA_PASSPHRASE is required and must be 8-63 chars from [A-Za-z0-9._@%+=,:/-]." >&2
   exit 1
 fi
 

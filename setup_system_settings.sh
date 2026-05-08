@@ -155,7 +155,11 @@ nft flush chain ip filter forward
 nft add rule ip filter forward iifname "${LAN_IF}" oifname "${WAN_IF}" accept
 nft add rule ip filter forward iifname "${WAN_IF}" oifname "${LAN_IF}" ct state related,established accept
 
-echo "[6/6] Restarting dnsmasq"
+echo "[6/7] Persisting nftables rules"
+nft list ruleset > /etc/nftables.conf
+systemctl enable nftables >/dev/null
+
+echo "[7/7] Restarting dnsmasq"
 systemctl restart dnsmasq
 
 cat <<MSG

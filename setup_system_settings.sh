@@ -126,7 +126,7 @@ systemctl enable --now hostapd
 echo "[3/7] Enabling IPv4 forwarding"
 sysctl -w net.ipv4.ip_forward=1 >/dev/null
 if grep -Eq '^[[:space:]]*net\.ipv4\.ip_forward=' /etc/sysctl.conf; then
-  sed -i 's/^[[:space:]]*net\.ipv4\.ip_forward=.*/net.ipv4.ip_forward=1/' /etc/sysctl.conf
+  sed -i 's/^\([[:space:]]*\)net\.ipv4\.ip_forward=.*/\1net.ipv4.ip_forward=1/' /etc/sysctl.conf
 else
   printf '\nnet.ipv4.ip_forward=1\n' >> /etc/sysctl.conf
 fi

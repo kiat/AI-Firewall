@@ -1,4 +1,5 @@
 # AI-Firewall
+This project is a simple Linux Router and Firewall. It can be used in a classroom setting to block the generative AI websites during computer based assessements. 
 
 Ubuntu LAN/WAN firewall scripts for classrooms: allow approved websites and block common Generative AI services.
 

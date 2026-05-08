@@ -64,13 +64,8 @@ DHCP_START="$(( (_start >> 24) & 0xFF )).$(( (_start >> 16) & 0xFF )).$(( (_star
 DHCP_END="$(( (_end >> 24) & 0xFF )).$(( (_end >> 16) & 0xFF )).$(( (_end >> 8) & 0xFF )).$(( _end & 0xFF ))"
 NETMASK="$(( (_mask >> 24) & 0xFF )).$(( (_mask >> 16) & 0xFF )).$(( (_mask >> 8) & 0xFF )).$(( _mask & 0xFF ))"
 
-if [[ -z "${HOTSPOT_WPA_PASSPHRASE}" ]]; then
-  echo "HOTSPOT_WPA_PASSPHRASE is required (8-63 characters)." >&2
-  exit 1
-fi
-
 if (( ${#HOTSPOT_WPA_PASSPHRASE} < 8 || ${#HOTSPOT_WPA_PASSPHRASE} > 63 )); then
-  echo "HOTSPOT_WPA_PASSPHRASE must be between 8 and 63 characters." >&2
+  echo "HOTSPOT_WPA_PASSPHRASE is required and must be between 8 and 63 characters." >&2
   exit 1
 fi
 
@@ -190,7 +185,7 @@ if [[ ! -f /etc/nftables.conf ]]; then
 flush ruleset
 include "/etc/nftables.d/*.nft"
 MAINNFT
-elif ! grep -q 'include "/etc/nftables.d/\*.nft"' /etc/nftables.conf; then
+elif ! grep -Fq 'include "/etc/nftables.d/*.nft"' /etc/nftables.conf; then
   echo 'include "/etc/nftables.d/*.nft"' >> /etc/nftables.conf
 fi
 

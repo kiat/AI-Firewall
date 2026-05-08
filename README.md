@@ -9,10 +9,10 @@ This project is a simple Linux LAN/WAN Firewall scripts for classrooms. It can b
   - Checks for required Ubuntu packages and installs missing ones.
   - Re-runs itself with `sudo` if needed.
 - `setup_system_settings.sh`
-  - Validates LAN/WAN interfaces exist.
-  - Brings interfaces up, sets LAN IP/CIDR, attempts WAN DHCP when needed.
+  - Validates the LAN interface exists.
+  - Brings the LAN interface up and sets its static IP/CIDR.
   - Enables IPv4 forwarding.
-  - Writes base DHCP/DNS config to `/etc/dnsmasq.d/ai-firewall-base.conf`.
+  - Writes base DNS config to `/etc/dnsmasq.d/ai-firewall-base.conf`.
 - `setup_firewall.sh`
   - Validates LAN/WAN interfaces and input files.
   - Loads allow-list domains into `ipset` via `dnsmasq`.
@@ -43,19 +43,21 @@ ip -br link
 ./check_ubuntu_packages.sh
 ```
 
-5. Run system setup with your real interfaces and LAN settings:
+5. Run system setup with your real LAN interface and LAN settings:
 
 ```bash
-sudo LAN_IF=enp3s0 WAN_IF=enp2s0 LAN_CIDR=10.20.30.1/24 DHCP_START=10.20.30.50 DHCP_END=10.20.30.200 DHCP_LEASE=12h ./setup_system_settings.sh
+sudo LAN_IF=enp3s0 LAN_CIDR=10.20.30.1/24 ./setup_system_settings.sh
 ```
 
-6. Apply firewall policy:
+6. Configure the WAN interface manually using your preferred network configuration method.
+
+7. Apply firewall policy:
 
 ```bash
 sudo LAN_IF=enp3s0 WAN_IF=enp2s0 ./setup_firewall.sh
 ```
 
-7. Point student devices to this firewall for DHCP/DNS (or set DNS manually to the firewall LAN IP) so filtering is enforced.
+8. Configure student devices with IP settings for the LAN and point DNS to the firewall LAN IP so filtering is enforced.
 
 ## Important notes
 

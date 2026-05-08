@@ -57,7 +57,7 @@ sudo LAN_IF=enp3s0 LAN_CIDR=10.20.30.1/24 ./setup_system_settings.sh
 sudo LAN_IF=enp3s0 WAN_IF=enp2s0 ./setup_firewall.sh
 ```
 
-8. Configure student devices with IP settings for the LAN and point DNS to the firewall LAN IP so filtering is enforced.
+8. Configure student devices with LAN IP settings (for example, a static address in `10.20.30.0/24` if you used `10.20.30.1/24` on the firewall) and point DNS to the firewall LAN IP so filtering is enforced. If you want automatic client addressing, provide DHCP separately.
 
 ## Important notes
 

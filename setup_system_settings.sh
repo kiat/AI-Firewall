@@ -15,7 +15,7 @@ if ! ip link show "${LAN_IF}" >/dev/null 2>&1; then
   exit 1
 fi
 
-required_commands=(ip iptables ipset dnsmasq)
+required_commands=(ip dnsmasq)
 missing_commands=()
 
 for command_name in "${required_commands[@]}"; do

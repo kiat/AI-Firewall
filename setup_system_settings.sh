@@ -90,7 +90,9 @@ netplan apply
 echo "[2/7] Configuring hostapd hotspot"
 HOSTAPD_CONF="/etc/hostapd/hostapd.conf"
 mkdir -p /etc/hostapd
-cat > "${HOSTAPD_CONF}" <<HOSTAPD
+(
+  umask 077
+  cat > "${HOSTAPD_CONF}" <<HOSTAPD
 interface=${LAN_IF}
 driver=${HOSTAPD_DRIVER}
 ssid=${HOTSPOT_SSID}
@@ -104,6 +106,7 @@ wpa_passphrase=${HOTSPOT_WPA_PASSPHRASE}
 wpa_key_mgmt=WPA-PSK
 rsn_pairwise=CCMP
 HOSTAPD
+)
 chmod 600 "${HOSTAPD_CONF}"
 
 HOSTAPD_DEFAULT_CONF="/etc/default/hostapd"
@@ -182,7 +185,6 @@ NFTCONF
 if [[ ! -f /etc/nftables.conf ]]; then
   cat > /etc/nftables.conf <<'MAINNFT'
 #!/usr/sbin/nft -f
-flush ruleset
 include "/etc/nftables.d/*.nft"
 MAINNFT
 elif ! grep -Fq 'include "/etc/nftables.d/*.nft"' /etc/nftables.conf; then

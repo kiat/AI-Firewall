@@ -6,6 +6,8 @@ REQUIRED_PACKAGES=(
   iptables
   ipset
   dnsmasq
+  hostapd
+  nftables
   isc-dhcp-client
   iptables-persistent
   netplan.io

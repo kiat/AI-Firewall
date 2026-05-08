@@ -9,9 +9,11 @@ This project is a simple Linux LAN/WAN Firewall scripts for classrooms. It can b
   - Checks for required Ubuntu packages and installs missing ones.
   - Re-runs itself with `sudo` if needed.
 - `setup_system_settings.sh`
-  - Validates the LAN interface exists.
+  - Validates the LAN and WAN interfaces exist.
   - Brings the LAN (WiFi hotspot) interface up and assigns a static IP via netplan (`/etc/netplan/01-hotspot.yaml`), then runs `netplan apply`.
+  - Configures and starts `hostapd` using `/etc/hostapd/hostapd.conf` and `/etc/default/hostapd`.
   - Enables IPv4 forwarding.
+  - Applies base `nftables` NAT and forwarding rules for LAN → WAN routing.
   - Writes base DNS/DHCP config to `/etc/dnsmasq.d/ai-firewall-base.conf` (includes DHCP range, upstream DNS servers, and DNS hardening options).
 - `setup_firewall.sh`
   - Validates LAN/WAN interfaces and input files.
@@ -43,20 +45,20 @@ ip -br link
 ./check_ubuntu_packages.sh
 ```
 
-5. Run system setup with your real LAN (WiFi hotspot) interface name and IP settings:
+5. Run system setup with your real LAN/WAN interface names and hotspot settings:
 
 ```bash
-sudo LAN_IF=wlx984827c3f4db LAN_CIDR=10.10.0.1/24 ./setup_system_settings.sh
+sudo LAN_IF=wlx984827c3f4db WAN_IF=wlp3s0 LAN_CIDR=10.10.0.1/24 HOTSPOT_SSID=MyFilteredHotspot HOTSPOT_WPA_PASSPHRASE=StrongPassword123 ./setup_system_settings.sh
 ```
 
-This writes `/etc/netplan/01-hotspot.yaml`, applies it (assigning the static IP to the hotspot interface), and configures dnsmasq to serve DHCP and DNS on that interface.
+This writes `/etc/netplan/01-hotspot.yaml`, applies it (assigning the static IP to the hotspot interface), writes `/etc/hostapd/hostapd.conf`, links it via `/etc/default/hostapd`, starts hostapd, enables IPv4 forwarding, and configures base nftables NAT/forwarding plus dnsmasq DHCP/DNS service on the hotspot interface.
 
 6. Configure the WAN interface manually using your preferred network configuration method.
 
 7. Apply firewall policy:
 
 ```bash
-sudo LAN_IF=enp3s0 WAN_IF=enp2s0 ./setup_firewall.sh
+sudo LAN_IF=wlx984827c3f4db WAN_IF=wlp3s0 ./setup_firewall.sh
 ```
 
 8. Configure student devices with LAN IP settings (for example, a static address in `10.20.30.0/24` if you used `10.20.30.1/24` on the firewall) and point DNS to the firewall LAN IP so filtering is enforced. If you want automatic client addressing, provide DHCP separately.
@@ -65,9 +67,9 @@ sudo LAN_IF=enp3s0 WAN_IF=enp2s0 ./setup_firewall.sh
 
 - Run setup scripts as root (`sudo`).
 - Default interface placeholders are `LAN` and `WAN`; you must override them unless your system uses those exact names.
-- `setup_system_settings.sh` assigns a static IP to the hotspot interface via netplan and configures dnsmasq as a DHCP/DNS server; it does not configure WAN.
+- `setup_system_settings.sh` assigns a static IP to the hotspot interface via netplan, configures `hostapd`, enables IPv4 forwarding, applies base nftables LAN↔WAN routing, and configures dnsmasq as a DHCP/DNS server.
 - `setup_firewall.sh` flushes existing `iptables` rules and saves a backup at `/etc/iptables/ai-firewall.backup.v4`.
-- Both setup scripts expect `dnsmasq` to be managed by `systemctl`.
+- `setup_system_settings.sh` expects both `dnsmasq` and `hostapd` to be managed by `systemctl`.
 
 ## Note for Instructors Using Canvas or Blackboard LMS
 

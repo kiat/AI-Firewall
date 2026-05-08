@@ -189,7 +189,7 @@ elif ! grep -Fq 'include "/etc/nftables.d/*.nft"' /etc/nftables.conf; then
   echo 'include "/etc/nftables.d/*.nft"' >> /etc/nftables.conf
 fi
 
-systemctl enable nftables >/dev/null
+systemctl enable nftables
 
 echo "[7/7] Restarting dnsmasq"
 systemctl restart dnsmasq

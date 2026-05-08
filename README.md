@@ -69,6 +69,7 @@ sudo LAN_IF=wlx984827c3f4db WAN_IF=wlp3s0 ./setup_firewall.sh
 - Run setup scripts as root (`sudo`).
 - Default interface placeholders are `LAN` and `WAN`; you must override them unless your system uses those exact names.
 - `setup_system_settings.sh` assigns a static IP to the hotspot interface via netplan, configures `hostapd`, enables IPv4 forwarding, applies base nftables LAN↔WAN routing, and configures dnsmasq as a DHCP/DNS server.
+- Hotspot credentials are stored in `/etc/hostapd/hostapd.conf`; this script sets file mode `0600` to restrict access.
 - `setup_firewall.sh` flushes existing `iptables` rules and saves a backup at `/etc/iptables/ai-firewall.backup.v4`.
 - `setup_system_settings.sh` expects both `dnsmasq` and `hostapd` to be managed by `systemctl`.
 

@@ -4,6 +4,11 @@ set -euo pipefail
 # You can edit these defaults here or override with environment variables.
 LAN_IF="${LAN_IF:-LAN}"
 LAN_CIDR="${LAN_CIDR:-10.20.30.1/24}"
+# Netplan renderer: use 'NetworkManager' when NM manages wifi, or 'networkd' for headless/server setups.
+NETPLAN_RENDERER="${NETPLAN_RENDERER:-NetworkManager}"
+# DHCP pool: first address offset from the network base and total pool size.
+DHCP_RANGE_OFFSET="${DHCP_RANGE_OFFSET:-10}"
+DHCP_RANGE_SIZE="${DHCP_RANGE_SIZE:-90}"
 
 if [[ "${EUID}" -ne 0 ]]; then
   echo "This script must be run as root." >&2
@@ -38,8 +43,8 @@ _mask=$(( (0xFFFFFFFF << (32 - _p)) & 0xFFFFFFFF ))
 IFS='.' read -r _o1 _o2 _o3 _o4 <<< "${LAN_IP}"
 _ip_int=$(( (_o1 << 24) | (_o2 << 16) | (_o3 << 8) | _o4 ))
 _net_int=$(( _ip_int & _mask ))
-_start=$(( _net_int + 10 ))
-_end=$(( _net_int + 100 ))
+_start=$(( _net_int + DHCP_RANGE_OFFSET ))
+_end=$(( _net_int + DHCP_RANGE_OFFSET + DHCP_RANGE_SIZE - 1 ))
 DHCP_START="$(( (_start >> 24) & 0xFF )).$(( (_start >> 16) & 0xFF )).$(( (_start >> 8) & 0xFF )).$(( _start & 0xFF ))"
 DHCP_END="$(( (_end >> 24) & 0xFF )).$(( (_end >> 16) & 0xFF )).$(( (_end >> 8) & 0xFF )).$(( _end & 0xFF ))"
 NETMASK="$(( (_mask >> 24) & 0xFF )).$(( (_mask >> 16) & 0xFF )).$(( (_mask >> 8) & 0xFF )).$(( _mask & 0xFF ))"
@@ -52,7 +57,7 @@ mkdir -p /etc/netplan
 cat > "${NETPLAN_CONF}" <<NETPLAN
 network:
   version: 2
-  renderer: NetworkManager
+  renderer: ${NETPLAN_RENDERER}
   wifis:
     ${LAN_IF}:
       dhcp4: no
@@ -88,6 +93,6 @@ cat <<MSG
 System settings configured.
 LAN interface: ${LAN_IF}
 LAN address:   ${LAN_CIDR}
-DHCP range:    ${DHCP_START} – ${DHCP_END}  (netmask ${NETMASK})
+DHCP range:    ${DHCP_START} - ${DHCP_END}  (netmask ${NETMASK})
 WAN setup:     configure manually before running setup_firewall.sh
 MSG

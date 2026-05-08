@@ -12,7 +12,7 @@ This project is a simple Linux LAN/WAN Firewall scripts for classrooms. It can b
   - Validates the LAN and WAN interfaces exist.
   - Brings the LAN (WiFi hotspot) interface up and assigns a static IP via netplan (`/etc/netplan/01-hotspot.yaml`), then runs `netplan apply`.
   - Configures and starts `hostapd` using `/etc/hostapd/hostapd.conf` and `/etc/default/hostapd`.
-  - Enables IPv4 forwarding.
+  - Enables IPv4 forwarding immediately and persists it in `/etc/sysctl.conf`.
   - Applies base `nftables` NAT and forwarding rules for LAN → WAN routing (in dedicated `ai_firewall_*` tables/chains).
   - Writes base DNS/DHCP config to `/etc/dnsmasq.d/ai-firewall-base.conf` (includes DHCP range, upstream DNS servers, and DNS hardening options).
 - `setup_firewall.sh`
@@ -51,7 +51,7 @@ ip -br link
 sudo LAN_IF=wlx984827c3f4db WAN_IF=wlp3s0 LAN_CIDR=10.10.0.1/24 HOTSPOT_SSID=MyFilteredHotspot HOTSPOT_WPA_PASSPHRASE=StrongPassword123 ./setup_system_settings.sh
 ```
 
-This writes `/etc/netplan/01-hotspot.yaml`, applies it (assigning the static IP to the hotspot interface), writes `/etc/hostapd/hostapd.conf` (with restricted file permissions), links it via `/etc/default/hostapd`, starts hostapd, enables IPv4 forwarding, configures base nftables NAT/forwarding rules, persists them to `/etc/nftables.d/ai-firewall.nft` (and enables `nftables`), and configures dnsmasq DHCP/DNS service on the hotspot interface.
+This writes `/etc/netplan/01-hotspot.yaml`, applies it (assigning the static IP to the hotspot interface), writes `/etc/hostapd/hostapd.conf` (with restricted file permissions), links it via `/etc/default/hostapd`, starts hostapd, enables IPv4 forwarding immediately and persists it in `/etc/sysctl.conf`, configures base nftables NAT/forwarding rules, persists them to `/etc/nftables.d/ai-firewall.nft` (and enables `nftables`), and configures dnsmasq DHCP/DNS service on the hotspot interface.
 `HOTSPOT_WPA_PASSPHRASE` is required and must be 8-63 characters.
 For better credential hygiene, avoid placing the passphrase directly in shell history on shared systems (for example: `read -rsp "Hotspot passphrase: " HOTSPOT_WPA_PASSPHRASE && echo && export HOTSPOT_WPA_PASSPHRASE` and then run the script).
 
@@ -69,7 +69,7 @@ sudo LAN_IF=wlx984827c3f4db WAN_IF=wlp3s0 ./setup_firewall.sh
 
 - Run setup scripts as root (`sudo`).
 - Default interface placeholders are `LAN` and `WAN`; you must override them unless your system uses those exact names.
-- `setup_system_settings.sh` assigns a static IP to the hotspot interface via netplan, configures `hostapd`, enables IPv4 forwarding, applies base nftables LAN↔WAN routing, and configures dnsmasq as a DHCP/DNS server.
+- `setup_system_settings.sh` assigns a static IP to the hotspot interface via netplan, configures `hostapd`, enables IPv4 forwarding immediately and persists it via `/etc/sysctl.conf`, applies base nftables LAN↔WAN routing, and configures dnsmasq as a DHCP/DNS server.
 - Hotspot credentials are stored in `/etc/hostapd/hostapd.conf`; this script sets file mode `0600` to restrict access.
 - `setup_firewall.sh` flushes existing `iptables` rules and saves a backup at `/etc/iptables/ai-firewall.backup.v4`.
 - `setup_system_settings.sh` expects both `dnsmasq` and `hostapd` to be managed by `systemctl`.

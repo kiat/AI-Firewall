@@ -169,6 +169,16 @@ ipset create "${ALLOWED_IPSET}" hash:net family inet -exist
 ipset flush "${ALLOWED_IPSET}"
 
 echo "[2/4] Writing dnsmasq policy from whitelist file"
+DNSMASQ_BASE_CONF_PATH="/etc/dnsmasq.d/ai-firewall-base.conf"
+{
+  echo "# Managed by setup_firewall.sh"
+  echo "# Upstream DNS servers used by dnsmasq to resolve queries from LAN clients."
+  echo "server=8.8.8.8"
+  echo "server=8.8.4.4"
+  echo "# Do not read upstream servers from /etc/resolv.conf."
+  echo "no-resolv"
+} > "${DNSMASQ_BASE_CONF_PATH}"
+
 DNSMASQ_POLICY_CONF_PATH="/etc/dnsmasq.d/ai-firewall-policy.conf"
 {
   echo "# Managed by setup_firewall.sh"
@@ -177,7 +187,7 @@ DNSMASQ_POLICY_CONF_PATH="/etc/dnsmasq.d/ai-firewall-policy.conf"
   done
 
   for domain in "${BLOCKED_AI_DOMAINS[@]}"; do
-    echo "address=/${domain}/"
+    echo "address=/${domain}/0.0.0.0"
   done
 } > "${DNSMASQ_POLICY_CONF_PATH}"
 
@@ -211,6 +221,12 @@ iptables -A INPUT -i "${LAN_IF}" -p tcp --dport 53 -j ACCEPT
 iptables -A FORWARD -m conntrack --ctstate ESTABLISHED,RELATED -j ACCEPT
 iptables -A FORWARD -i "${LAN_IF}" -o "${WAN_IF}" -m set --match-set "${ALLOWED_IPSET}" dst -j ACCEPT
 iptables -A FORWARD -i "${LAN_IF}" -o "${WAN_IF}" -j DROP
+
+# Intercept all DNS queries from LAN clients and redirect them to the local
+# dnsmasq, regardless of which upstream the client has configured (e.g. 8.8.8.8).
+# This ensures blocked-domain and ipset rules are always applied.
+iptables -t nat -A PREROUTING -i "${LAN_IF}" -p udp --dport 53 -j REDIRECT --to-port 53
+iptables -t nat -A PREROUTING -i "${LAN_IF}" -p tcp --dport 53 -j REDIRECT --to-port 53
 
 iptables -t nat -A POSTROUTING -o "${WAN_IF}" -j MASQUERADE
 iptables -P INPUT DROP

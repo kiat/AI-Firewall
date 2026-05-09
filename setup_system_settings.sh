@@ -4,7 +4,7 @@ set -euo pipefail
 # You can edit these defaults here or override with environment variables.
 LAN_IF="${LAN_IF:-LAN}"
 WAN_IF="${WAN_IF:-WAN}"
-LAN_CIDR="${LAN_CIDR:-10.20.30.1/24}"
+LAN_CIDR="${LAN_CIDR:-10.10.0.1/24}"
 # Netplan renderer: use 'NetworkManager' when NM manages wifi, or 'networkd' for headless/server setups.
 NETPLAN_RENDERER="${NETPLAN_RENDERER:-NetworkManager}"
 # DHCP pool: first address offset from the network base and total pool size.

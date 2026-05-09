@@ -9,6 +9,8 @@ instructuremedia.com
 cloudfront.net
 amazonaws.com
 duosecurity.com
+apache.org
+wikipedia.org
 
 # Optional direct network allow-list entries (supported by setup_firewall.sh)
 # 128.83.0.0/16

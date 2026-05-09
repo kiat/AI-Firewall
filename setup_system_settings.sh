@@ -125,9 +125,12 @@ systemctl enable --now hostapd
 
 echo "[3/7] Enabling IPv4 forwarding"
 sysctl -w net.ipv4.ip_forward=1 >/dev/null
-if ! grep -q '^net.ipv4.ip_forward=1$' /etc/sysctl.conf; then
-  echo 'net.ipv4.ip_forward=1' >> /etc/sysctl.conf
+if grep -Eq '^[[:space:]]*net\.ipv4\.ip_forward=' /etc/sysctl.conf; then
+  sed -i 's/^\([[:space:]]*\)net\.ipv4\.ip_forward=.*/\1net.ipv4.ip_forward=1/' /etc/sysctl.conf
+else
+  printf '\nnet.ipv4.ip_forward=1\n' >> /etc/sysctl.conf
 fi
+sysctl -p /etc/sysctl.conf >/dev/null
 
 echo "[4/7] Writing base dnsmasq config"
 DNSMASQ_BASE_CONF_PATH="/etc/dnsmasq.d/ai-firewall-base.conf"

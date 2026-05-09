@@ -184,7 +184,7 @@ ipset add "${ALLOWED_IPSET}" "${DNS_UPSTREAM_1}" -exist
 ipset add "${ALLOWED_IPSET}" "${DNS_UPSTREAM_2}" -exist
 
 echo "[2/4] Writing dnsmasq policy from whitelist file"
-DNSMASQ_BASE_CONF_PATH="/etc/dnsmasq.d/ai-firewall-base.conf"
+DNSMASQ_UPSTREAM_CONF_PATH="/etc/dnsmasq.d/ai-firewall-upstream.conf"
 {
   echo "# Managed by setup_firewall.sh"
   echo "# Upstream DNS servers used by dnsmasq to resolve queries from LAN clients."
@@ -192,7 +192,7 @@ DNSMASQ_BASE_CONF_PATH="/etc/dnsmasq.d/ai-firewall-base.conf"
   echo "server=${DNS_UPSTREAM_2}"
   echo "# Do not read upstream servers from /etc/resolv.conf."
   echo "no-resolv"
-} > "${DNSMASQ_BASE_CONF_PATH}"
+} > "${DNSMASQ_UPSTREAM_CONF_PATH}"
 
 DNSMASQ_POLICY_CONF_PATH="/etc/dnsmasq.d/ai-firewall-policy.conf"
 {

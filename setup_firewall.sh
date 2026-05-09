@@ -83,6 +83,13 @@ is_valid_ipv4_cidr() {
   is_valid_ipv4 "${ip}" && [[ "${prefix}" =~ ^([0-9]|[1-2][0-9]|3[0-2])$ ]]
 }
 
+for dns_upstream in "${DNS_UPSTREAM_1}" "${DNS_UPSTREAM_2}"; do
+  if ! is_valid_ipv4 "${dns_upstream}"; then
+    echo "Invalid DNS upstream IP address: ${dns_upstream}" >&2
+    exit 1
+  fi
+done
+
 load_whitelist_entries_from_file() {
   local file_path="$1"
   local entry
@@ -173,6 +180,8 @@ if ipset list -n | grep -Fxq "${ALLOWED_IPSET}"; then
 fi
 ipset create "${ALLOWED_IPSET}" hash:net family inet -exist
 ipset flush "${ALLOWED_IPSET}"
+ipset add "${ALLOWED_IPSET}" "${DNS_UPSTREAM_1}" -exist
+ipset add "${ALLOWED_IPSET}" "${DNS_UPSTREAM_2}" -exist
 
 echo "[2/4] Writing dnsmasq policy from whitelist file"
 DNSMASQ_BASE_CONF_PATH="/etc/dnsmasq.d/ai-firewall-base.conf"

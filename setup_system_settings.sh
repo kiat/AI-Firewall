@@ -1,6 +1,12 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
+
+# enable ipv4 forwarding
+sudo sysctl -w net.ipv4.ip_forward=1
+sudo sysctl -w net.ipv6.conf.all.forwarding=1
+
+
 # You can edit these defaults here or override with environment variables.
 LAN_IF="${LAN_IF:-LAN}"
 WAN_IF="${WAN_IF:-WAN}"

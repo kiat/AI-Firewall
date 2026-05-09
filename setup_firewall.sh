@@ -7,6 +7,8 @@ WAN_IF="${WAN_IF:-WAN}"
 WHITELIST_FILE="${WHITELIST_FILE:-$(dirname "$0")/whitelist.txt}"
 BLOCKED_AI_DOMAINS_FILE="${BLOCKED_AI_DOMAINS_FILE:-$(dirname "$0")/blocked_ai_domains.txt}"
 ALLOWED_IPSET="allowed_sites"
+DNS_UPSTREAM_1="${DNS_UPSTREAM_1:-8.8.8.8}"
+DNS_UPSTREAM_2="${DNS_UPSTREAM_2:-8.8.4.4}"
 
 if [[ "${EUID}" -ne 0 ]]; then
   echo "This script must be run as root." >&2
@@ -173,8 +175,8 @@ DNSMASQ_BASE_CONF_PATH="/etc/dnsmasq.d/ai-firewall-base.conf"
 {
   echo "# Managed by setup_firewall.sh"
   echo "# Upstream DNS servers used by dnsmasq to resolve queries from LAN clients."
-  echo "server=8.8.8.8"
-  echo "server=8.8.4.4"
+  echo "server=${DNS_UPSTREAM_1}"
+  echo "server=${DNS_UPSTREAM_2}"
   echo "# Do not read upstream servers from /etc/resolv.conf."
   echo "no-resolv"
 } > "${DNSMASQ_BASE_CONF_PATH}"
@@ -187,7 +189,7 @@ DNSMASQ_POLICY_CONF_PATH="/etc/dnsmasq.d/ai-firewall-policy.conf"
   done
 
   for domain in "${BLOCKED_AI_DOMAINS[@]}"; do
-    echo "address=/${domain}/0.0.0.0"
+    echo "local=/${domain}/"
   done
 } > "${DNSMASQ_POLICY_CONF_PATH}"
 

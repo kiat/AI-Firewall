@@ -1,3 +1,9 @@
+
+# enable ipv4 forwarding
+sudo sysctl -w net.ipv4.ip_forward=1
+sudo sysctl -w net.ipv6.conf.all.forwarding=1
+
+# reset the rules
 sudo iptables -F
 sudo iptables -t nat -F
 sudo iptables -t mangle -F

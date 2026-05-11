@@ -1,5 +1,5 @@
 # AI-Firewall
-This project is a simple Linux LAN/WAN Firewall scripts for classrooms. It can be used in a classroom setting to allow approved websites and block common Generative AI services during computer based assessements in a classroom settings. 
+This project is a simple Linux LAN/WAN Firewall scripts for usage in a classroom setting. It can be used in a classroom setting to allow approved websites and block common Generative AI services during computer based assessements in a classroom settings. 
 
 
 

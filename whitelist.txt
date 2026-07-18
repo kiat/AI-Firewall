@@ -1,8 +1,4 @@
-# Canvas UT Austin LMS and authentication dependencies
-canvas.utexas.edu
-login.utexas.edu
-eid.utexas.edu
-utexas.edu
+canvas.university.edu
 instructure.com
 canvaslms.com
 instructuremedia.com

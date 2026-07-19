@@ -123,6 +123,8 @@ echo "Interfaces found."
 echo
 echo "[2/10] Resetting iptables..."
 
+ipset destroy allowed_sites
+
 sudo ipset create allowed_sites hash:ip
 
 for ip in $(dig +short python.org); do

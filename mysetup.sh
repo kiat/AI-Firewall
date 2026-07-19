@@ -12,9 +12,16 @@ sudo apt update
 sudo apt install -y \
 network-manager \
 dnsmasq \
+hostapd \
 nftables \
 tcpdump \
+ipset \ 
 ipset
+
+sudo modprobe ip_set
+sudo modprobe ip_set_hash_ip
+sudo modprobe xt_set
+
 
 
 
@@ -118,7 +125,6 @@ echo "[2/10] Resetting iptables..."
 
 sudo ipset create allowed_sites hash:ip
 
-
 for ip in $(dig +short python.org); do
     sudo ipset add allowed_sites $ip
 done
@@ -135,14 +141,18 @@ for ip in $(dig +short utexas.edu); do
     sudo ipset add allowed_sites $ip
 done
 
+sudo ipset add allowed_sites 8.8.8.8
+
+
+
 
 iptables -F
 iptables -t nat -F
 iptables -t mangle -F
 iptables -X
 
-iptables -P INPUT ACCEPT
-iptables -P OUTPUT ACCEPT
+# iptables -P INPUT ACCEPT
+# iptables -P OUTPUT ACCEPT
 # iptables -P FORWARD ACCEPT
 
 # Default Drop 
@@ -156,7 +166,7 @@ iptables -A FORWARD \
     
 # use the list of allowed_sites. 
 iptables -A FORWARD \
-    -i wlx984827c3f4db \
+    -i "$WAN_IF" \
     -m set --match-set allowed_sites dst \
     -j ACCEPT
 
@@ -408,3 +418,13 @@ echo "  IPs     : ${DHCP_START} - ${DHCP_END}"
 echo "  Gateway : ${HOTSPOT_IP}"
 echo "  DNS     : ${HOTSPOT_IP}"
 echo "===================================================="
+
+
+sudo ipset list allowed_sites
+
+sudo ipset list
+
+# check it with 
+# sudo dmesg -w
+# 
+

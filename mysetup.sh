@@ -123,7 +123,7 @@ echo "Interfaces found."
 echo
 echo "[2/10] Resetting iptables..."
 
-ipset destroy allowed_sites
+sudo ipset destroy allowed_sites
 
 sudo ipset create allowed_sites hash:ip
 
@@ -422,7 +422,7 @@ echo "  DNS     : ${HOTSPOT_IP}"
 echo "===================================================="
 
 
-sudo ipset list allowed_sites
+# sudo ipset list allowed_sites
 
 sudo ipset list
 

@@ -15,7 +15,6 @@ dnsmasq \
 hostapd \
 nftables \
 tcpdump \
-ipset \ 
 ipset
 
 sudo modprobe ip_set

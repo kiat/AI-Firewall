@@ -122,7 +122,7 @@ echo "Interfaces found."
 echo
 echo "[2/10] Resetting iptables..."
 
-sudo ipset destroy allowed_sites
+sudo ipset destroy allowed_sites --exist
 
 sudo ipset create allowed_sites hash:ip
 

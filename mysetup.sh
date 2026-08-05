@@ -4,6 +4,9 @@
 # or if net-tools is installed "sudo apt install net-tools"
 # ifconfig -a 
 
+# manual ip setup 
+# sudo ip addr add 10.10.0.1/24 dev eth0
+
 
 # Update and Install packages. 
 
@@ -73,7 +76,7 @@ HOTSPOT_NETMASK="255.255.255.0"
 DHCP_START="10.10.0.2"
 DHCP_END="10.10.0.200"
 
-SSID="LinuxRouterHotspot"
+SSID="CS-Test"
 PASSWORD="StrongPassword123"
 
 ###############################################################################

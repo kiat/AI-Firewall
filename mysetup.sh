@@ -196,7 +196,7 @@ iptables -A FORWARD \
     -m set \
     --match-set allowed_sites dst \
     -j ACCEPT
-
+# Very important to do prerouting to not let clients bypass dns
 iptables -t nat -A PREROUTING \
     -i wlx984827c3f4db \
     -p udp \
@@ -291,9 +291,7 @@ ipset=/canvas.utexas.edu/allowed
 
 
 # Allow only these domains
-server=/wikipedia.org/8.8.8.8
-server=/python.org/8.8.8.8
-server=/apache.org/8.8.8.8
+
 
 server=/instruction.com/8.8.8.8
 server=/utexas.edu/8.8.8.8
@@ -305,9 +303,19 @@ server=/utexas.edu/8.8.8.8
 server=/duosecurity.com/8.8.8.8
 server=/canvaslms.com/8.8.8.8
 server=/instructure.com/8.8.8.8
+server=/utaustinesl.instructure.com/8.8.8.8
+
 server=/cloudfront.net/8.8.8.8
 server=/amazonaws.com/8.8.8.8
 server=/s3.amazonaws.com/8.8.8.8
+server=/utexas.instructure.com/8.8.8.8
+
+# Course Specific 
+server=/wikipedia.org/8.8.8.8
+server=/python.org/8.8.8.8
+server=/scikit-learn.org/8.8.8.8
+
+server=/apache.org/8.8.8.8
 
 
 # Block everything else
@@ -315,6 +323,7 @@ address=/#/0.0.0.0
 
 log-queries
 log-dhcp
+log-facility=/var/log/dnsmasq.log
 EOF
 
 echo "dnsmasq configuration written."
@@ -380,6 +389,10 @@ iptables -A FORWARD \
 
 
 sudo iptables -I FORWARD -i "$LAN_IF" -o "$WAN_IF" -j LOG --log-prefix "HOTSPOT-TRAFFIC: "
+
+
+# Make sure clients cannot bypass DNS
+# Otherwise users can just use 8.8.8.8 manually and bypass your filter.
 
 
 echo "NAT configured."

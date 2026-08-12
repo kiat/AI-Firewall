@@ -309,6 +309,9 @@ server=/cloudfront.net/8.8.8.8
 server=/amazonaws.com/8.8.8.8
 server=/s3.amazonaws.com/8.8.8.8
 server=/utexas.instructure.com/8.8.8.8
+server=/edstream.com/8.8.8.8
+server=/us.edstream.com/8.8.8.8
+
 
 # Course Specific 
 server=/wikipedia.org/8.8.8.8

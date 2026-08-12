@@ -10,22 +10,19 @@
 
 # Update and Install packages. 
 
-sudo apt update
+# sudo apt update
 
-sudo apt install -y \
-network-manager \
-dnsmasq \
-hostapd \
-nftables \
-tcpdump \
-ipset
+# sudo apt install -y \
+# network-manager \
+# dnsmasq \
+# hostapd \
+# nftables \
+# tcpdump \
+# ipset
 
 sudo modprobe ip_set
 sudo modprobe ip_set_hash_ip
 sudo modprobe xt_set
-
-
-
 
 
 #!/bin/bash
@@ -125,6 +122,9 @@ echo "Interfaces found."
 echo
 echo "[2/10] Resetting iptables..."
 
+sudo iptables -F
+
+sudo ipset flush
 sudo ipset destroy allowed_sites --exist
 
 sudo ipset create allowed_sites hash:ip
@@ -168,24 +168,48 @@ iptables -A FORWARD \
     -j ACCEPT
 
     
-# use the list of allowed_sites. 
-iptables -A FORWARD \
-    -i "$WAN_IF" \
-    -m set --match-set allowed_sites dst \
-    -j ACCEPT
+# # use the list of allowed_sites. 
+# iptables -A FORWARD \
+#     -i "$WAN_IF" \
+#     -m set --match-set allowed_sites dst \
+#     -j ACCEPT
 
 
+# iptables -A FORWARD \
+#     -i "$WAN_IF" \
+#     -p udp --dport 53 \
+#     -d 10.10.0.1 \
+#     -j ACCEPT
+
+# iptables -A FORWARD \
+#     -i "$WAN_IF" \
+#     -p tcp --dport 53 \
+#     -d 10.10.0.1 \
+#     -j ACCEPT
+
 iptables -A FORWARD \
-    -i "$WAN_IF" \
-    -p udp --dport 53 \
-    -d 10.10.0.1 \
+    -m conntrack \
+    --ctstate ESTABLISHED,RELATED \
     -j ACCEPT
 
 iptables -A FORWARD \
-    -i "$WAN_IF" \
-    -p tcp --dport 53 \
-    -d 10.10.0.1 \
+    -m set \
+    --match-set allowed_sites dst \
     -j ACCEPT
+
+iptables -t nat -A PREROUTING \
+    -i wlx984827c3f4db \
+    -p udp \
+    --dport 53 \
+    -j REDIRECT \
+    --to-port 53
+
+iptables -t nat -A PREROUTING \
+    -i wlx984827c3f4db \
+    -p tcp \
+    --dport 53 \
+    -j REDIRECT \
+    --to-port 53
 
 iptables -A FORWARD \
     -i "$WAN_IF" \
@@ -259,13 +283,31 @@ dhcp-option=6,${HOTSPOT_IP}
 server=8.8.8.8
 server=1.1.1.1
 
+ipset=/canvas.utexas.edu/allowed
+ipset=/utexas.instructure.com/allowed
+ipset=/login.utexas.edu/allowed
+ipset=/utexas.edu/allowed
+ipset=/canvas.utexas.edu/allowed
+
+
 # Allow only these domains
 server=/wikipedia.org/8.8.8.8
 server=/python.org/8.8.8.8
 server=/apache.org/8.8.8.8
-# server=/instruction.com/8.8.8.8
+
+server=/instruction.com/8.8.8.8
 server=/utexas.edu/8.8.8.8
+
 server=/canvas.utexas.edu/8.8.8.8
+server=/utexas.instructure.com/8.8.8.8
+server=/login.utexas.edu/8.8.8.8
+server=/utexas.edu/8.8.8.8
+server=/duosecurity.com/8.8.8.8
+server=/canvaslms.com/8.8.8.8
+server=/instructure.com/8.8.8.8
+server=/cloudfront.net/8.8.8.8
+server=/amazonaws.com/8.8.8.8
+server=/s3.amazonaws.com/8.8.8.8
 
 
 # Block everything else

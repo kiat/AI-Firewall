@@ -215,7 +215,7 @@ sudo iptables -t nat -A PREROUTING \
     -i "$LAN_IF" \
     -p tcp \
     --dport 443 \
-    -m set ! --match-set allowed dst \
+    -m set ! --match-set allowed_sites dst \
     -j REDIRECT --to-ports 80
 
 

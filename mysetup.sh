@@ -196,6 +196,7 @@ iptables -A FORWARD \
     -m set \
     --match-set allowed_sites dst \
     -j ACCEPT
+
 # Very important to do prerouting to not let clients bypass dns
 iptables -t nat -A PREROUTING \
     -i "$LAN_IF" \
@@ -211,20 +212,13 @@ iptables -t nat -A PREROUTING \
     -j REDIRECT \
     --to-port 53
 
-sudo iptables -t nat -A PREROUTING \
-    -i "$LAN_IF" \
-    -p tcp \
-    --dport 443 \
-    -m set ! --match-set allowed_sites dst \
-    -j REDIRECT --to-ports 80
-
-
 # sudo iptables -t nat -A PREROUTING \
 #     -i "$LAN_IF" \
 #     -p tcp \
 #     --dport 443 \
 #     -m set ! --match-set allowed_sites dst \
 #     -j REDIRECT --to-ports 80
+
 
 
 iptables -A FORWARD \

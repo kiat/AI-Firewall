@@ -129,21 +129,21 @@ sudo ipset destroy allowed_sites --exist
 
 sudo ipset create allowed_sites hash:ip
 
-for ip in $(dig +short python.org); do
-    sudo ipset add allowed_sites $ip
-done
+# for ip in $(dig +short python.org); do
+#     sudo ipset add allowed_sites $ip
+# done
 
-for ip in $(dig +short wikipedia.org); do
-    sudo ipset add allowed_sites $ip
-done
+# for ip in $(dig +short wikipedia.org); do
+#     sudo ipset add allowed_sites $ip
+# done
 
-for ip in $(dig +short apache.org); do
-    sudo ipset add allowed_sites $ip
-done
+# for ip in $(dig +short apache.org); do
+#     sudo ipset add allowed_sites $ip
+# done
 
-for ip in $(dig +short utexas.edu); do
-    sudo ipset add allowed_sites $ip
-done
+# for ip in $(dig +short utexas.edu); do
+#     sudo ipset add allowed_sites $ip
+# done
 
 sudo ipset add allowed_sites 8.8.8.8
 

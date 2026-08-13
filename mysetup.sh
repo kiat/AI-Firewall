@@ -123,9 +123,12 @@ echo
 echo "[2/10] Resetting iptables..."
 
 sudo iptables -F
+sudo iptables -X
 
 sudo ipset flush
-sudo ipset destroy allowed_sites --exist
+sudo nft flush ruleset
+sudo ipset destroy 
+# sudo ipset destroy allowed_sites --exist
 
 sudo ipset create allowed_sites hash:ip
 
@@ -197,6 +200,23 @@ iptables -A FORWARD \
     --match-set allowed_sites dst \
     -j ACCEPT
 
+
+
+# sudo iptables -t nat -A PREROUTING \
+#     -i "$LAN_IF" \
+#     -p tcp \
+#     --dport 80 \
+#     -m set ! --match-set allowed_sites dst \
+#     -j REDIRECT --to-ports 80
+
+# sudo iptables -t nat -A PREROUTING \
+#     -i "$LAN_IF" \
+#     -p tcp \
+#     --dport 443 \
+#     -m set ! --match-set allowed_sites dst \
+#     -j REDIRECT --to-ports 80
+
+
 # Very important to do prerouting to not let clients bypass dns
 iptables -t nat -A PREROUTING \
     -i "$LAN_IF" \
@@ -212,12 +232,7 @@ iptables -t nat -A PREROUTING \
     -j REDIRECT \
     --to-port 53
 
-# sudo iptables -t nat -A PREROUTING \
-#     -i "$LAN_IF" \
-#     -p tcp \
-#     --dport 443 \
-#     -m set ! --match-set allowed_sites dst \
-#     -j REDIRECT --to-ports 80
+
 
 
 

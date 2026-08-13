@@ -73,8 +73,8 @@ HOTSPOT_NETMASK="255.255.255.0"
 DHCP_START="10.10.0.2"
 DHCP_END="10.10.0.200"
 
-SSID="CS-Test"
-PASSWORD="StrongPassword123"
+SSID="CS-Tests"
+PASSWORD="CS4UT2026"
 
 ###############################################################################
 
@@ -150,10 +150,10 @@ sudo ipset add allowed_sites 8.8.8.8
 
 
 
-iptables -F
-iptables -t nat -F
-iptables -t mangle -F
-iptables -X
+sudo iptables -F
+sudo iptables -t nat -F
+sudo iptables -t mangle -F
+sudo iptables -X
 
 # iptables -P INPUT ACCEPT
 # iptables -P OUTPUT ACCEPT

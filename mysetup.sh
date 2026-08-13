@@ -327,6 +327,7 @@ server=/apache.org/8.8.8.8
 
 
 # Block everything else
+# Default: everything resolves to the router
 address=/#/10.10.0.1
 
 log-queries

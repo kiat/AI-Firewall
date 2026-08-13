@@ -1,0 +1,283 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>Website Access Restricted</title>
+
+    <style>
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            margin: 0;
+            padding: 0;
+            font-family: Arial, Helvetica, sans-serif;
+            background: #f4f6f8;
+            color: #333;
+        }
+
+        .container {
+            max-width: 900px;
+            margin: 50px auto;
+            padding: 20px;
+        }
+
+        .card {
+            background: white;
+            border-radius: 12px;
+            padding: 40px;
+            box-shadow: 0 4px 18px rgba(0, 0, 0, 0.12);
+        }
+
+        .icon {
+            font-size: 60px;
+            text-align: center;
+            margin-bottom: 10px;
+        }
+
+        h1 {
+            text-align: center;
+            color: #b00020;
+            margin-bottom: 10px;
+        }
+
+        .message {
+            text-align: center;
+            font-size: 18px;
+            line-height: 1.6;
+            margin-bottom: 30px;
+        }
+
+        .notice {
+            background: #fff3cd;
+            border: 1px solid #ffe69c;
+            border-radius: 8px;
+            padding: 15px 20px;
+            margin-bottom: 30px;
+            text-align: center;
+        }
+
+        h2 {
+            margin-top: 30px;
+            margin-bottom: 15px;
+            color: #333;
+            border-bottom: 2px solid #ddd;
+            padding-bottom: 8px;
+        }
+
+        .links {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+            gap: 12px;
+        }
+
+        .link {
+            display: block;
+            padding: 15px 18px;
+            background: #f7f9fb;
+            border: 1px solid #d8dee4;
+            border-radius: 8px;
+            text-decoration: none;
+            color: #145ea8;
+            font-weight: bold;
+            transition: all 0.2s ease;
+        }
+
+        .link:hover {
+            background: #e9f2fb;
+            border-color: #145ea8;
+            transform: translateY(-1px);
+        }
+
+        .description {
+            display: block;
+            font-size: 13px;
+            font-weight: normal;
+            color: #666;
+            margin-top: 5px;
+        }
+
+        .footer {
+            text-align: center;
+            color: #777;
+            font-size: 13px;
+            margin-top: 35px;
+            line-height: 1.5;
+        }
+
+        .blocked {
+            color: #b00020;
+            font-weight: bold;
+        }
+
+        @media (max-width: 600px) {
+            .container {
+                margin: 20px auto;
+                padding: 10px;
+            }
+
+            .card {
+                padding: 25px 20px;
+            }
+
+            h1 {
+                font-size: 26px;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+<div class="container">
+
+    <div class="card">
+
+        <div class="icon">🚫</div>
+
+        <h1>Website Access Restricted</h1>
+
+        <div class="message">
+            <p>
+                The website you attempted to access is not permitted
+                on this network. 
+                You are not allowed to access this website during Tests and other course assessments. 
+            </p>
+
+            <p>
+                Please use one of the permitted websites listed below.
+            </p>
+        </div>
+
+        <div class="notice">
+            <strong>Academic Network</strong><br>
+            Access is limited to websites approved for this course.
+        </div>
+
+
+        <!-- ===================================================== -->
+        <!-- UT AUSTIN / COURSE SYSTEMS                            -->
+        <!-- ===================================================== -->
+
+        <h2>UT Austin &amp; Course Systems</h2>
+
+        <div class="links">
+
+            <a class="link"
+               href="https://canvas.utexas.edu/"
+               target="_blank"
+               rel="noopener noreferrer">
+                Canvas
+                <span class="description">
+                    UT Austin Canvas
+                </span>
+            </a>
+
+            <a class="link"
+               href="https://login.utexas.edu/"
+               target="_blank"
+               rel="noopener noreferrer">
+                UT Austin Login
+                <span class="description">
+                    UT EID / University Login
+                </span>
+            </a>
+
+            <a class="link"
+               href="https://www.utexas.edu/"
+               target="_blank"
+               rel="noopener noreferrer">
+                UT Austin
+                <span class="description">
+                    University of Texas at Austin
+                </span>
+            </a>
+
+        </div>
+
+
+        <!-- ===================================================== -->
+        <!-- COURSE RESOURCES                                      -->
+        <!-- ===================================================== -->
+
+        <h2>Course Resources</h2>
+
+        <div class="links">
+
+            <a class="link"
+               href="https://www.wikipedia.org/"
+               target="_blank"
+               rel="noopener noreferrer">
+                Wikipedia
+                <span class="description">
+                    Online encyclopedia
+                </span>
+            </a>
+
+            <a class="link"
+               href="https://www.python.org/"
+               target="_blank"
+               rel="noopener noreferrer">
+                Python
+                <span class="description">
+                    Python programming language
+                </span>
+            </a>
+
+            <a class="link"
+               href="https://scikit-learn.org/"
+               target="_blank"
+               rel="noopener noreferrer">
+                Scikit-learn
+                <span class="description">
+                    Machine learning library
+                </span>
+            </a>
+
+            <a class="link"
+               href="https://www.apache.org/"
+               target="_blank"
+               rel="noopener noreferrer">
+                Apache
+                <span class="description">
+                    Apache Software Foundation
+                </span>
+            </a>
+
+            <a class="link"
+               href="https://www.whatismyip.com/"
+               target="_blank"
+               rel="noopener noreferrer">
+                What Is My IP
+                <span class="description">
+                    Check your network IP address
+                </span>
+            </a>
+
+        </div>
+
+
+        <div class="footer">
+
+            <p>
+                <span class="blocked">
+                    Access to other websites is restricted.
+                </span>
+            </p>
+
+            <p>
+                If you believe a website is required for this course
+                but is not listed above, please contact your instructor.
+            </p>
+
+        </div>
+
+    </div>
+
+</div>
+
+</body>
+</html>

@@ -198,18 +198,26 @@ iptables -A FORWARD \
     -j ACCEPT
 # Very important to do prerouting to not let clients bypass dns
 iptables -t nat -A PREROUTING \
-    -i wlx984827c3f4db \
+    -i "$WAN_IF" \
     -p udp \
     --dport 53 \
     -j REDIRECT \
     --to-port 53
 
 iptables -t nat -A PREROUTING \
-    -i wlx984827c3f4db \
+    -i "$WAN_IF" \
     -p tcp \
     --dport 53 \
     -j REDIRECT \
     --to-port 53
+
+sudo iptables -t nat -A PREROUTING \
+    -i "$WAN_IF" \
+    -p tcp \
+    --dport 443 \
+    -m set ! --match-set allowed_sites dst \
+    -j REDIRECT --to-ports 80
+
 
 iptables -A FORWARD \
     -i "$WAN_IF" \
@@ -220,6 +228,8 @@ iptables -A FORWARD \
     -i "$WAN_IF" \
     -p tcp --dport 53 \
     -j DROP
+
+
 
 
 echo "iptables reset completed."

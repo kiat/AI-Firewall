@@ -327,7 +327,7 @@ server=/apache.org/8.8.8.8
 
 
 # Block everything else
-address=/#/0.0.0.0
+address=/#/10.10.0.1
 
 log-queries
 log-dhcp

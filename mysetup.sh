@@ -321,6 +321,8 @@ server=/amazonaws.com/8.8.8.8
 server=/s3.amazonaws.com/8.8.8.8
 server=/utexas.instructure.com/8.8.8.8
 
+server=/canvas-user-content.com/8.8.8.8
+
 server=/edstem.org/8.8.8.8
 server=/us.edstem.org/8.8.8.8
 server=/edcdn.net/8.8.8.8

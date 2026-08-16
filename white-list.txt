@@ -1,0 +1,18 @@
+# white-list.txt
+canvas.utexas.edu
+utexas.edu
+utexas.instructure.com
+login.utexas.edu
+duosecurity.com
+instructure.com
+edstem.org
+us.edstem.org
+edcdn.net
+cloudfront.net
+amazonaws.com
+s3.amazonaws.com
+wikipedia.org
+python.org
+scikit-learn.org
+apache.org
+whatismyip.com

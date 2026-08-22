@@ -1,14 +1,18 @@
-canvas.university.edu
+# white-list.txt
+canvas.utexas.edu
+utexas.edu
+utexas.instructure.com
+login.utexas.edu
+duosecurity.com
 instructure.com
-canvaslms.com
-instructuremedia.com
+edstem.org
+us.edstem.org
+edcdn.net
 cloudfront.net
 amazonaws.com
-duosecurity.com
-apache.org
+s3.amazonaws.com
 wikipedia.org
-github.com
-
-# Optional direct network allow-list entries (supported by setup_firewall.sh)
-# 128.83.0.0/16
-# 18.160.0.0/12
+python.org
+scikit-learn.org
+apache.org
+whatismyip.com

@@ -22,8 +22,8 @@
 ###############################################################################
 #
 # WHITELIST:
-# Current folder should include the white-list.txt file. 
-#     ./white-list.txt
+# Current folder should include the whitelist.txt file. 
+#     ./whitelist.txt
 #
 # Example:
 #
@@ -97,7 +97,7 @@ DNS2="1.1.1.1"
 
 CONFIG_DIR="."
 
-WHITE_LIST_FILE="${CONFIG_DIR}/white-list.txt"
+WHITE_LIST_FILE="${CONFIG_DIR}/whitelist.txt"
 
 DNSMASQ_CONFIG="/etc/dnsmasq.d/cs-router.conf"
 
